@@ -59,7 +59,7 @@ def match_text(data, puuid):
             if i["win"]:
                 text += "Victoire\n"
             else:
-                text += "Défaite\n"
+                text += "Défaite (L)\n"
     return text
             
 
@@ -143,8 +143,9 @@ def main():
                     
                     if response2.status_code == 200:
                         channel = discord.utils.get(bot.get_all_channels(), type=discord.ChannelType.text)
-                        await channel.send(match_text())
+                        await channel.send(match_text(response2.json(), puuid))
                         dernier_matchDict[puuid] = response.json()[0]
+                        save_data(puuidDict, dernier_matchDict)
                     else:
                         print("Erreur lors de la requête du dernier match différent : " + str(response.status_code))
                 
