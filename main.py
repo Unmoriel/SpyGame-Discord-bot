@@ -53,7 +53,22 @@ def match_text(data, puuid):
     for i in data["info"]["participants"]:
         if(i["puuid"] == puuid):
             text += "Pseudo : " + i["summonerName"] + "\n"
-            text += "Type de partie : " + data["info"]["gameMode"] + "\n"
+            queueId = data["info"]["queueId"]
+            text += "Type de partie : "
+            if queueId == 420:
+                text += "Ranked\n"
+            elif queueId == 430:
+                text += "Normal Blind\n"
+            elif queueId == 400:
+                text += "Normal Draft\n"
+            elif queueId == 450:
+                text += "ARAM\n"
+            elif queueId == 440:
+                text += "Flex\n"
+            elif queueId == 31 or queueId == 32 or queueId == 33:
+                text += "Coop vs IA\n"
+            else:
+                text += queueId+" inconnue\n"
             text += "Champion : " + i["championName"] + "\n"
             text += "KDA : " + str(i["kills"]) + "/" + str(i["deaths"]) + "/" + str(i["assists"]) + "\n"
             if i["win"]:
@@ -126,7 +141,7 @@ def main():
     
         
     '''
-    All 10 seconds, check if the last match of each player in the dictionnary is the same
+    All 10 seconds, check if the last match of each player is same as stored in the dictionnary
     If it's not the same, send a message in the discord channel (see match_text()) 
     and update the dictionnary
     '''
