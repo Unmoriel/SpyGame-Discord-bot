@@ -2,22 +2,52 @@ import discord
 from discord.ext import commands, tasks
 from os import path
 import requests
-import pickle as pic
+import json
 
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
-api_key = ""
+cheminDATA = path.dirname(chemin) + "\\data\\"
 
+'''
+Return the api key (first riot, secondly discord) from the a json file (in local)
+which is not in the git repository (here it's in a folder named "data"
+in the parent folder's project and his name is "apiKey.json")
+'''
+def get_api_key(riot, discord_k):
+    with open(cheminDATA + "apiKey.json") as file:
+        data = json.load(file)
+        riot = data["riot"]
+        discord_k = data["discord"]
+        return riot, discord_k
 
-def save_data(puuidDict, dernier_matchDict):
-    with open(chemin+"/data.bin", "ab") as fichier_data:
-        pic.dump([puuidDict, dernier_matchDict], fichier_data)
-
+'''
+Load data from the json file
+If he doesn't exist, create it
+'''
 def load_data():
-    with open(chemin+"/data.bin", "rb") as fichier_data:
-        puuidDict, dernier_matchDict = pic.load(fichier_data)[0], pic.load(fichier_data)[1]
-    return puuidDict, dernier_matchDict
+    try:
+        with open(cheminDATA + "data.json", 'rb') as file:
+            data = json.load(file)
+            puuidDict = data["puuidDict"]
+            dernier_matchDict = data["dernier_matchDict"]
+            print("Données chargées")
+            return puuidDict, dernier_matchDict
+    except:
+        save_data({}, {})
+        print("Fichier données créé")
+        return {}, {}
 
+'''
+Save data in the json file
+'''
+def save_data(puuidDict, dernier_matchDict):
+    with open(cheminDATA + "data.json", 'w') as file:
+        json.dump({"puuidDict":puuidDict, "dernier_matchDict":dernier_matchDict}, file)
+        print("Données sauvegardées")
 
+'''
+Return the text to send in the discord channel
+(When someone just win or loose a game)
+'''
 def match_text(data, puuid):
     text = ""
     for i in data["info"]["participants"]:
@@ -32,62 +62,60 @@ def match_text(data, puuid):
                 text += "Défaite\n"
     return text
             
+
 def main():
-    # Créer une instance du bot
+    riot, discord_k = '', '' # API keys, see get_api_key()
+    riot, discord_k = get_api_key(riot, discord_k)
+
     bot = commands.Bot(command_prefix='/', intents=discord.Intents.all())
 
-    puiidDict = {} # {pseudo : puuid}
+    # Dictionnary where data of players are stored (in local)
+    puuidDict = {} # {pseudo : puuid}
     dernier_matchDict = {} # {puuid : dernier_match}
 
-    # Événement d'initialisation du bot
+    # Load data from the json file
+    puuidDict, dernier_matchDict = load_data()
+
+    # When the discord bot is ready
     @bot.event
     async def on_ready():
         print(f'Connecté en tant que {bot.user.name}')
+        look_for_last_match.start()
 
-        try:
-            puuidDict, dernier_matchDict = load_data()
-            print("Fichier de données chargé")
-        except:
-            save_data(puuidDict, dernier_matchDict)
-            print("Fichier de données créé")
-
-        cherche_derniers_match.start()
-
-    # Commande personnalisée
+    # Append a player in the dictionnary to watch him
     @bot.command()
-    async def ajout(ctx, pseudo):
-        puuidDict, dernier_matchDict = load_data()
+    async def add(ctx, pseudo):
         if pseudo in puuidDict.keys():
             await ctx.send("Ce pseudo est déjà enregistré")
         else:
-            url_sumoner = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{pseudo}?api_key={api_key}"
+            url_sumoner = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{pseudo}?api_key={riot}"
             response = requests.get(url_sumoner)
             if response.status_code == 200:
                 puuidDict[pseudo] = response.json()["puuid"]
-                url_dernierMatch =  f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{response.json()['puuid']}/ids?start=0&count=1&api_key={api_key}"
+                url_dernierMatch =  f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{response.json()['puuid']}/ids?start=0&count=1&api_key={riot}"
                 response_drMatch = requests.get(url_dernierMatch)
                 if response_drMatch.status_code == 200:
                     dernier_matchDict[puuidDict[pseudo]] = response_drMatch.json()[0]
                     await ctx.send(pseudo + " a bien été ajouté")
-                    save_data(puuidDict, dernier_matchDict)
                 else:
                     await ctx.send("Erreur lors de la requête du dernier match : " + str(response.status_code))
             else:
                 await ctx.send("Erreur lors de la requête du pseudo : " + str(response.status_code))
+        save_data(puuidDict, dernier_matchDict)
 
+    # Remove a player from the dictionnary
     @bot.command()
-    async def supprimer(ctx, pseudo):
-        puuidDict, dernier_matchDict = load_data()
+    async def remove(ctx, pseudo):
         if pseudo in puuidDict.keys():
             del puuidDict[pseudo]
             await ctx.send(pseudo + " a bien été supprimé")
-            save_data(puuidDict, dernier_matchDict)
         else:
             await ctx.send("Ce pseudo n'est pas enregistré")
+        save_data(puuidDict, dernier_matchDict)
 
+    # Show the list of players who are watched
     @bot.command()
-    async def liste(ctx):
-        puuidDict, dernier_matchDict = load_data()
+    async def list(ctx):
         text = ""
         for pseudo in puuidDict.keys():
             text += pseudo + "\n"
@@ -96,16 +124,20 @@ def main():
         await ctx.send(text)
     
         
-
+    '''
+    All 10 seconds, check if the last match of each player in the dictionnary is the same
+    If it's not the same, send a message in the discord channel (see match_text()) 
+    and update the dictionnary
+    '''
     @tasks.loop(seconds=10)
-    async def cherche_derniers_match():
+    async def look_for_last_match():
         for puuid, dernier_match in dernier_matchDict.items():
-            url_dernierMatch =  f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=1&api_key={api_key}"
+            url_dernierMatch =  f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=1&api_key={riot}"
             response = requests.get(url_dernierMatch)
             if response.status_code == 200:
                 
                 if dernier_match != response.json()[0]:
-                    url_dernierMatchDiff = f"https://europe.api.riotgames.com/lol/match/v5/matches/{response.json()[0]}?api_key={api_key}"
+                    url_dernierMatchDiff = f"https://europe.api.riotgames.com/lol/match/v5/matches/{response.json()[0]}?api_key={riot}"
                     response2 = requests.get(url_dernierMatchDiff)
                     
                     if response2.status_code == 200:
@@ -120,8 +152,6 @@ def main():
             else:
                 print("Erreur lors de la requête du dernier match : " + str(response.status_code))
         
-
-
-    bot.run('')
+    bot.run(discord_k)
 
 main()
