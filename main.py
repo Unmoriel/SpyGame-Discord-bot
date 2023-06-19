@@ -108,6 +108,7 @@ def main():
     async def remove(ctx, pseudo):
         if pseudo in puuidDict.keys():
             del puuidDict[pseudo]
+            del dernier_matchDict[puuidDict[pseudo]]
             await ctx.send(pseudo + " a bien été supprimé")
         else:
             await ctx.send("Ce pseudo n'est pas enregistré")
