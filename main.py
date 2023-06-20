@@ -4,6 +4,7 @@ from os import path
 import requests
 import json
 
+
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
 cheminDATA = path.dirname(chemin) + "\\data\\"
 
@@ -43,6 +44,8 @@ def save_data(puuidDict, dernier_matchDict):
     with open(cheminDATA + "data.json", 'w') as file:
         json.dump({"puuidDict":puuidDict, "dernier_matchDict":dernier_matchDict}, file)
         print("Données sauvegardées")
+
+
 
 '''
 Return the text to send in the discord channel
@@ -138,6 +141,45 @@ def main():
         if(text == ""):
             text = "Aucun pseudo enregistré"
         await ctx.send(text)
+
+    @bot.event
+    async def on_message(message):
+        if message.content == '!embed':
+            embed = discord.Embed(
+            title='Unmoriel win',
+            color=0xFF0000,
+            )
+            embed.add_field(
+                name='Ranked - 7/12/3',
+                value='Bref',
+                inline=True
+            )
+            embed.set_thumbnail(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/DrMundo.png")
+            # Ajouter plusieurs images à l'embed
+            embed.set_image(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/DrMundo.png")
+            embed.add_field(
+                name="Champ 1",
+                value="Contenu du champ 1",
+                inline=False
+            )
+            embed.set_image(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/Amumu.png")
+            embed.add_field(
+                name="Champ 2",
+                value="Contenu du champ 2",
+                inline=False
+            )
+            embed.set_image(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/DrMundo.png")
+            embed.add_field(
+                name="Champ 3",
+                value="Contenu du champ 3",
+                inline=False
+            )
+
+
+
+            await message.channel.send(embed=embed)
+    
+
     
         
     '''
@@ -158,7 +200,40 @@ def main():
                     
                     if response2.status_code == 200:
                         channel = discord.utils.get(bot.get_all_channels(), type=discord.ChannelType.text)
-                        await channel.send(match_text(response2.json(), puuid))
+                        queueId = response2.json()["info"]["queueId"]
+                        print(queueId)
+                        type_partie = "" 
+                        if queueId == 420:
+                            type_partie += "Solo/Duo"
+                        elif queueId == 430:
+                            type_partie += "Normal Blind"
+                        elif queueId == 400:
+                            type_partie += "Normal Draft"
+                        elif queueId == 450:
+                            type_partie += "ARAM"
+                        elif queueId == 440:
+                            type_partie += "Flex"
+                        elif queueId == 31 or queueId == 32 or queueId == 33:
+                            type_partie += "Coop vs IA"
+                        else:
+                            text += queueId+" inconnue\n"
+
+                        for participant in response2.json()["info"]["participants"]:
+                            if participant["puuid"] == puuid:
+                                 
+                                embed = discord.Embed(
+                                        title=participant["summonerName"] + " " + ("win" if participant["win"] else "lose") + " a " + type_partie,
+                                        color=0xFF0000,
+                                )
+                                embed.add_field(
+                                        name= participant["championName"] + " - " + str(participant["kills"]) + "/" + str(participant["deaths"]) + "/" + str(participant["assists"]),
+                                        value='',
+                                        inline=True
+                                )
+                                embed.set_thumbnail(
+                                    url=f"http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/{participant['championName']}.png"
+                                )
+                        await channel.send(embed=embed)
                         dernier_matchDict[puuid] = response.json()[0]
                         save_data(puuidDict, dernier_matchDict)
                     else:
@@ -170,5 +245,5 @@ def main():
                 print("Erreur lors de la requête du dernier match : " + str(response.status_code))
         
     bot.run(discord_k)
-
+print(cheminDATA)
 main()
