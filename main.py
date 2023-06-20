@@ -8,6 +8,7 @@ from cv2 import imwrite, imread
 from numpy import concatenate 
 import requests
 import json
+import datetime
 
 
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
@@ -194,10 +195,12 @@ def main():
                             type_partie += "a Coop vs IA"
                         else:
                             text += queueId+" __inconnue__\n"
+                        
+                        pseudo = ''
 
                         for participant in response2.json()["info"]["participants"]:
                             if participant["puuid"] == puuid:
-                                 
+                                pseudo = participant["summonerName"]
                                 embed = discord.Embed(
                                         title=participant["summonerName"] + " " + ("win" if participant["win"] else "lost") + " " + type_partie,
                                         color=0xFF0000,
@@ -210,6 +213,7 @@ def main():
                                 embed.set_thumbnail(
                                     url=f"http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/{participant['championName']}.png"
                                 )
+                                embed.timestamp = datetime.datetime.now()
                             
                         gameChampImage = crea_Image(response2.json()["info"]["participants"])
                         imwrite(cheminDATA+"temp/assembled_image.png", gameChampImage)
@@ -219,6 +223,7 @@ def main():
                         
                         await channel.send(embed=embed)
                         dernier_matchDict[puuid] = response.json()[0]
+                        print("Nouveau match pour "+pseudo)
                         save_data(puuidDict, dernier_matchDict)
                     else:
                         print("Erreur lors de la requête du dernier match différent : " + str(response.status_code))
