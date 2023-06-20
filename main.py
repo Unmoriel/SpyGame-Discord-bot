@@ -44,41 +44,6 @@ def save_data(puuidDict, dernier_matchDict):
     with open(cheminDATA + "data.json", 'w') as file:
         json.dump({"puuidDict":puuidDict, "dernier_matchDict":dernier_matchDict}, file)
         print("Données sauvegardées")
-
-
-
-'''
-Return the text to send in the discord channel
-(When someone just win or loose a game)
-'''
-def match_text(data, puuid):
-    text = ""
-    for i in data["info"]["participants"]:
-        if(i["puuid"] == puuid):
-            text += "Pseudo : " + i["summonerName"] + "\n"
-            queueId = data["info"]["queueId"]
-            text += "Type de partie : "
-            if queueId == 420:
-                text += "Ranked\n"
-            elif queueId == 430:
-                text += "Normal Blind\n"
-            elif queueId == 400:
-                text += "Normal Draft\n"
-            elif queueId == 450:
-                text += "ARAM\n"
-            elif queueId == 440:
-                text += "Flex\n"
-            elif queueId == 31 or queueId == 32 or queueId == 33:
-                text += "Coop vs IA\n"
-            else:
-                text += queueId+" inconnue\n"
-            text += "Champion : " + i["championName"] + "\n"
-            text += "KDA : " + str(i["kills"]) + "/" + str(i["deaths"]) + "/" + str(i["assists"]) + "\n"
-            if i["win"]:
-                text += "Victoire\n"
-            else:
-                text += "Défaite (L)\n"
-    return text
             
 
 def main():
@@ -142,6 +107,7 @@ def main():
             text = "Aucun pseudo enregistré"
         await ctx.send(text)
 
+    #Test for embed message
     @bot.event
     async def on_message(message):
         if message.content == '!embed':
@@ -184,7 +150,7 @@ def main():
         
     '''
     All 10 seconds, check if the last match of each player is same as stored in the dictionnary
-    If it's not the same, send a message in the discord channel (see match_text()) 
+    If it's not the same, send a embed message in the discord 
     and update the dictionnary
     '''
     @tasks.loop(seconds=10)
@@ -201,28 +167,27 @@ def main():
                     if response2.status_code == 200:
                         channel = discord.utils.get(bot.get_all_channels(), type=discord.ChannelType.text)
                         queueId = response2.json()["info"]["queueId"]
-                        print(queueId)
                         type_partie = "" 
                         if queueId == 420:
-                            type_partie += "Solo/Duo"
+                            type_partie += "a Solo/Duo"
                         elif queueId == 430:
-                            type_partie += "Normal Blind"
+                            type_partie += "a Normal Blind"
                         elif queueId == 400:
-                            type_partie += "Normal Draft"
+                            type_partie += "a Normal Draft"
                         elif queueId == 450:
-                            type_partie += "ARAM"
+                            type_partie += "an ARAM"
                         elif queueId == 440:
-                            type_partie += "Flex"
+                            type_partie += "a Flex"
                         elif queueId == 31 or queueId == 32 or queueId == 33:
-                            type_partie += "Coop vs IA"
+                            type_partie += "a Coop vs IA"
                         else:
-                            text += queueId+" inconnue\n"
+                            text += queueId+" __inconnue__\n"
 
                         for participant in response2.json()["info"]["participants"]:
                             if participant["puuid"] == puuid:
                                  
                                 embed = discord.Embed(
-                                        title=participant["summonerName"] + " " + ("win" if participant["win"] else "lose") + " a " + type_partie,
+                                        title=participant["summonerName"] + " " + ("win" if participant["win"] else "lost") + " " + type_partie,
                                         color=0xFF0000,
                                 )
                                 embed.add_field(
