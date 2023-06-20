@@ -1,6 +1,11 @@
 import discord
 from discord.ext import commands, tasks
 from os import path
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from cv2 import imwrite, imread
+from numpy import concatenate 
 import requests
 import json
 
@@ -13,12 +18,29 @@ Return the api key (first riot, secondly discord) from the a json file (in local
 which is not in the git repository (here it's in a folder named "data"
 in the parent folder's project and his name is "apiKey.json")
 '''
-def get_api_key(riot, discord_k):
+def get_api_key(riot, discord_k, cloudinary_k):
     with open(cheminDATA + "apiKey.json") as file:
         data = json.load(file)
         riot = data["riot"]
         discord_k = data["discord"]
-        return riot, discord_k
+        cloudinary_k = data["cloudinary"]
+        return riot, discord_k, cloudinary_k
+
+'''
+Create the image with all the champions of the game
+This time files are store in local not in the git repository
+'''
+def crea_Image(participant):
+
+    image = imread(cheminDATA+'champion/tiles/'+participant[0]['championName']+'_0.jpg')
+    for i in range(1, len(participant)):
+        imagePlus = imread(cheminDATA+'champion/tiles/'+participant[i]['championName']+'_0.jpg')
+        image = concatenate((image, imagePlus), axis=1)
+        if i == 4:
+            imageVersus = imread(cheminDATA+'others/versus_white.png')
+            image = concatenate((image, imageVersus), axis=1)
+    
+    return image
 
 '''
 Load data from the json file
@@ -47,8 +69,16 @@ def save_data(puuidDict, dernier_matchDict):
             
 
 def main():
-    riot, discord_k = '', '' # API keys, see get_api_key()
-    riot, discord_k = get_api_key(riot, discord_k)
+    riot, discord_k, cloudinary_k = '', '', {} # API keys, see get_api_key()
+    riot, discord_k, cloudinary_k = get_api_key(riot, discord_k, cloudinary_k)
+
+    cloudinary.config(
+        cloud_name = cloudinary_k["cloud_name"],
+        api_key = cloudinary_k["api_key"],
+        api_secret = cloudinary_k["api_secret"],
+        secure = True
+    )
+
 
     bot = commands.Bot(command_prefix='/', intents=discord.Intents.all())
 
@@ -111,6 +141,7 @@ def main():
     @bot.event
     async def on_message(message):
         if message.content == '!embed':
+            cloudinary.uploader.upload(cheminDATA+"/assembled_image.png", public_id = "assembled_image", overwrite = True, resource_type = "image")
             embed = discord.Embed(
             title='Unmoriel win',
             color=0xFF0000,
@@ -122,26 +153,7 @@ def main():
             )
             embed.set_thumbnail(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/DrMundo.png")
             # Ajouter plusieurs images à l'embed
-            embed.set_image(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/DrMundo.png")
-            embed.add_field(
-                name="Champ 1",
-                value="Contenu du champ 1",
-                inline=False
-            )
-            embed.set_image(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/Amumu.png")
-            embed.add_field(
-                name="Champ 2",
-                value="Contenu du champ 2",
-                inline=False
-            )
-            embed.set_image(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/DrMundo.png")
-            embed.add_field(
-                name="Champ 3",
-                value="Contenu du champ 3",
-                inline=False
-            )
-
-
+            embed.set_image(url=cloudinary.api.resource("assembled_image")["url"])
 
             await message.channel.send(embed=embed)
     
@@ -192,12 +204,19 @@ def main():
                                 )
                                 embed.add_field(
                                         name= participant["championName"] + " - " + str(participant["kills"]) + "/" + str(participant["deaths"]) + "/" + str(participant["assists"]),
-                                        value='',
+                                        value= "CS : "+ str(participant["totalMinionsKilled"]) + " - " + str(participant["goldEarned"]) + " golds",
                                         inline=True
                                 )
                                 embed.set_thumbnail(
                                     url=f"http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/{participant['championName']}.png"
                                 )
+                            
+                        gameChampImage = crea_Image(response2.json()["info"]["participants"])
+                        imwrite(cheminDATA+"temp/assembled_image.png", gameChampImage)
+                        #I must upload the image to cloudinary to get the url because discord doesn't accept local image
+                        cloudinary.uploader.upload(cheminDATA+"temp/assembled_image.png", public_id = "assembled_image", overwrite = True, resource_type = "image")
+                        embed.set_image(url=cloudinary.api.resource("assembled_image")["url"])
+                        
                         await channel.send(embed=embed)
                         dernier_matchDict[puuid] = response.json()[0]
                         save_data(puuidDict, dernier_matchDict)
