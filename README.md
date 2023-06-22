@@ -18,7 +18,7 @@ Python libraries required:
 * discord
 * os
 * cloudinary
-* cv2 (OpenCV)
+* matplotlib.image
 * numpy
 * requests
 * json
@@ -64,6 +64,15 @@ apikey.json is a JSON file that contains the necessary API keys. It is structure
 }<br>
 
 As for how the bot works, I leave it to you to look at the code, as it is usually sufficiently commented.
+
+Command :
+
+* /add username: (adds your username to the list of players for which the bot monitors the history)
+* /remove username: (removes your username from this list)
+* /list: returns the list of all usernames that the bot monitors the history for
+* /here: command to be executed in the text channel where you want the bot to send win or loss messages (by default, the bot uses the first text channel of your server).
+
+username is your League of Legend username do not confuse it with your riot id
 
 ********************
 # SpyGame-Discord-bot - FR
@@ -135,7 +144,9 @@ Pour ce qui est du fonctionnement du bot, je vous laisse le soin de regarder le 
 
 Commandes :
 
-* /add pseudo : (ajoute votre pseudo à la liste des joueurs pour lequel le bot regarde l'historique)
-* /remove pseudo : (enlève votre pseudo de cette liste)
-* /list : renvoie la liste de tout les pseudos dont le bot regarde l'historique
-* /here : commande à faire dans le salon textuel ou vous voulez que le bot envoie les messages de win ou de loose (par défaut, le bot prend le premier channel textuel de votre serveur.
+* /add pseudo : (ajoute ton pseudo à la liste des joueurs pour lesquels le bot surveille l'historique)
+* /remove pseudo : (enlève ton pseudo de cette liste)
+* /list : renvoie la liste de tous les pseudos dont le bot surveille l'historique
+* /here : commande à exécuter dans le salon textuel où tu veux que le bot envoie les messages de victoire ou de défaite (par défaut, le bot utilise le premier canal textuel de ton serveur).
+
+pseudo corresond à votre pseudo League of Legend (et pas forcement votre riot id)
