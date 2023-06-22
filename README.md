@@ -85,8 +85,8 @@ Je pars aussi du principe que vous savez déjà comment mettre en place un bot D
 Librairies Python dont vous avez besoin :
 * discord
 * os
-* cloudinary
-* cv2 (OpenCV)
+* cloudinary (necessaire car discord n'accepte que les images qui sont stocké sur internet)
+* matplotlib.image
 * numpy
 * requests
 * json
@@ -132,3 +132,10 @@ apikey.json est un fichier JSON qui contient les clés des API nécessaires. Il 
 }<br>
 
 Pour ce qui est du fonctionnement du bot, je vous laisse le soin de regarder le code, il est normalement suffisamment commenté.
+
+Commandes :
+
+* /add pseudo : (ajoute votre pseudo à la liste des joueurs pour lequel le bot regarde l'historique)
+* /remove pseudo : (enlève votre pseudo de cette liste)
+* /list : renvoie la liste de tout les pseudos dont le bot regarde l'historique
+* /here : commande à faire dans le salon textuel ou vous voulez que le bot envoie les messages de win ou de loose (par défaut, le bot prend le premier channel textuel de votre serveur.
