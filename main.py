@@ -4,7 +4,7 @@ from os import path
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-from cv2 import imwrite, imread
+from matplotlib.image import imread, imsave
 from numpy import concatenate 
 import requests
 import json
@@ -12,7 +12,7 @@ import datetime
 
 
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
-cheminDATA = path.dirname(chemin) + "\\data\\"
+cheminDATA = path.dirname(chemin) + "/data/"
 
 '''
 Return the api key (first riot, secondly discord) from the a json file (in local)
@@ -38,7 +38,7 @@ def crea_Image(participant):
         imagePlus = imread(cheminDATA+'champion/tiles/'+participant[i]['championName']+'_0.jpg')
         image = concatenate((image, imagePlus), axis=1)
         if i == 4:
-            imageVersus = imread(cheminDATA+'others/versus_white.png')
+            imageVersus = imread(cheminDATA+'others/versus_white.jpg')
             image = concatenate((image, imageVersus), axis=1)
     
     return image
@@ -53,19 +53,20 @@ def load_data():
             data = json.load(file)
             puuidDict = data["puuidDict"]
             dernier_matchDict = data["dernier_matchDict"]
+            channel = data['channel']
             print("Données chargées")
-            return puuidDict, dernier_matchDict
+            return puuidDict, dernier_matchDict, channel
     except:
-        save_data({}, {})
+        save_data({}, {}, -1)
         print("Fichier données créé")
-        return {}, {}
+        return {}, {}, -1
 
 '''
 Save data in the json file
 '''
-def save_data(puuidDict, dernier_matchDict):
+def save_data(puuidDict, dernier_matchDict, channel_id):
     with open(cheminDATA + "data.json", 'w') as file:
-        json.dump({"puuidDict":puuidDict, "dernier_matchDict":dernier_matchDict}, file)
+        json.dump({"puuidDict":puuidDict, "dernier_matchDict":dernier_matchDict, "channel" : channel_id}, file)
         print("Données sauvegardées")
             
 
@@ -86,15 +87,15 @@ def main():
     # Dictionnary where data of players are stored (in local)
     puuidDict = {} # {pseudo : puuid}
     dernier_matchDict = {} # {puuid : dernier_match}
-
-    # Load data from the json file
-    puuidDict, dernier_matchDict = load_data()
-
+    channel_id = -1 # Channel id where the bot will send the message     
+    puuidDict, dernier_matchDict, channel_id = load_data()
+    
     # When the discord bot is ready
     @bot.event
     async def on_ready():
         print(f'Connecté en tant que {bot.user.name}')
         look_for_last_match.start()
+
 
     # Append a player in the dictionnary to watch him
     @bot.command()
@@ -115,7 +116,7 @@ def main():
                     await ctx.send("Erreur lors de la requête du dernier match : " + str(response.status_code))
             else:
                 await ctx.send("Erreur lors de la requête du pseudo : " + str(response.status_code))
-        save_data(puuidDict, dernier_matchDict)
+        save_data(puuidDict, dernier_matchDict, channel_id)
 
     # Remove a player from the dictionnary
     @bot.command()
@@ -126,7 +127,7 @@ def main():
             await ctx.send(pseudo + " a bien été supprimé")
         else:
             await ctx.send("Ce pseudo n'est pas enregistré")
-        save_data(puuidDict, dernier_matchDict)
+        save_data(puuidDict, dernier_matchDict, channel_id)
 
     # Show the list of players who are watched
     @bot.command()
@@ -136,31 +137,16 @@ def main():
             text += pseudo + "\n"
         if(text == ""):
             text = "Aucun pseudo enregistré"
-        await ctx.send(text)
-
-    #Test for embed message
-    @bot.event
-    async def on_message(message):
-        if message.content == '!embed':
-            cloudinary.uploader.upload(cheminDATA+"/assembled_image.png", public_id = "assembled_image", overwrite = True, resource_type = "image")
-            embed = discord.Embed(
-            title='Unmoriel win',
-            color=0xFF0000,
-            )
-            embed.add_field(
-                name='Ranked - 7/12/3',
-                value='Bref',
-                inline=True
-            )
-            embed.set_thumbnail(url="http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/DrMundo.png")
-            # Ajouter plusieurs images à l'embed
-            embed.set_image(url=cloudinary.api.resource("assembled_image")["url"])
-
-            await message.channel.send(embed=embed)
+        await ctx.send(text)        
     
+    # Change the channel where the bot will send the image
+    @bot.command()
+    async def here(ctx):
+        channel = ctx.channel
+        channel_id = channel.id
+        await ctx.send("Le channel de notification est maintenant " + channel.name)
+        save_data(puuidDict, dernier_matchDict, channel_id)
 
-    
-        
     '''
     All 10 seconds, check if the last match of each player is same as stored in the dictionnary
     If it's not the same, send a embed message in the discord 
@@ -176,9 +162,12 @@ def main():
                 if dernier_match != response.json()[0]:
                     url_dernierMatchDiff = f"https://europe.api.riotgames.com/lol/match/v5/matches/{response.json()[0]}?api_key={riot}"
                     response2 = requests.get(url_dernierMatchDiff)
+                    if channel_id == -1:
+                        channel = discord.utils.get(bot.get_all_channels(), type=discord.ChannelType.text)
+                    else:
+                        channel = bot.get_channel(channel_id)
                     
                     if response2.status_code == 200:
-                        channel = discord.utils.get(bot.get_all_channels(), type=discord.ChannelType.text)
                         queueId = response2.json()["info"]["queueId"]
                         type_partie = "" 
                         if queueId == 420:
@@ -216,7 +205,7 @@ def main():
                                 embed.timestamp = datetime.datetime.now()
                             
                         gameChampImage = crea_Image(response2.json()["info"]["participants"])
-                        imwrite(cheminDATA+"temp/assembled_image.png", gameChampImage)
+                        imsave(cheminDATA+"temp/assembled_image.png", gameChampImage)
                         #I must upload the image to cloudinary to get the url because discord doesn't accept local image
                         cloudinary.uploader.upload(cheminDATA+"temp/assembled_image.png", public_id = "assembled_image", overwrite = True, resource_type = "image")
                         embed.set_image(url=cloudinary.api.resource("assembled_image")["url"])
@@ -224,7 +213,7 @@ def main():
                         await channel.send(embed=embed)
                         dernier_matchDict[puuid] = response.json()[0]
                         print("Nouveau match pour "+pseudo)
-                        save_data(puuidDict, dernier_matchDict)
+                        save_data(puuidDict, dernier_matchDict, channel_id)
                     else:
                         print("Erreur lors de la requête du dernier match différent : " + str(response.status_code))
                 
@@ -234,5 +223,4 @@ def main():
                 print("Erreur lors de la requête du dernier match : " + str(response.status_code))
         
     bot.run(discord_k)
-print(cheminDATA)
 main()
