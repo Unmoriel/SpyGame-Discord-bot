@@ -9,13 +9,14 @@ from numpy import concatenate
 import requests
 import json
 import datetime
+from time import sleep
 
 
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
 cheminDATA = path.dirname(chemin) + "/data/"
 
 '''
-Return the api key (first riot, secondly discord) from the a json file (in local)
+Return the api key from the a json file (in local)
 which is not in the git repository (here it's in a folder named "data"
 in the parent folder's project and his name is "apiKey.json")
 '''
@@ -29,7 +30,7 @@ def get_api_key(riot, discord_k, cloudinary_k):
 
 '''
 Create the image with all the champions of the game
-This time files are store in local not in the git repository
+This time files are store in local
 '''
 def crea_Image(participant):
 
@@ -51,22 +52,19 @@ def load_data():
     try:
         with open(cheminDATA + "data.json", 'rb') as file:
             data = json.load(file)
-            puuidDict = data["puuidDict"]
-            dernier_matchDict = data["dernier_matchDict"]
-            channel = data['channel']
             print("Données chargées")
-            return puuidDict, dernier_matchDict, channel
+            return data
     except:
-        save_data({}, {}, -1)
+        save_data({})
         print("Fichier données créé")
-        return {}, {}, -1
+        return {}
 
 '''
 Save data in the json file
 '''
-def save_data(puuidDict, dernier_matchDict, channel_id):
+def save_data(puuidDict):
     with open(cheminDATA + "data.json", 'w') as file:
-        json.dump({"puuidDict":puuidDict, "dernier_matchDict":dernier_matchDict, "channel" : channel_id}, file)
+        json.dump(puuidDict, file)
         print("Données sauvegardées")
             
 
@@ -85,10 +83,11 @@ def main():
     bot = commands.Bot(command_prefix='/', intents=discord.Intents.all())
 
     # Dictionnary where data of players are stored (in local)
-    puuidDict = {} # {pseudo : puuid}
-    dernier_matchDict = {} # {puuid : dernier_match}
-    channel_id = -1 # Channel id where the bot will send the message     
-    puuidDict, dernier_matchDict, channel_id = load_data()
+    puuidDict = load_data() # {pseudo : {'puuid' : puuid, 'summonerId' : summonerId 'dernierMatch' : dernierMatch, 'channel' : channel_id, 'LP' : LP,
+                            #  'rank' : rank, 'tier' : tier}}
+    
+    
+    
     
     # When the discord bot is ready
     @bot.event
@@ -97,37 +96,46 @@ def main():
         look_for_last_match.start()
 
 
+
     # Append a player in the dictionnary to watch him
     @bot.command()
-    async def add(ctx, pseudo):
+    async def add(ctx, pseudo : str, channel : discord.TextChannel):
         if pseudo in puuidDict.keys():
             await ctx.send("Ce pseudo est déjà enregistré")
         else:
-            url_sumoner = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{pseudo}?api_key={riot}"
-            response = requests.get(url_sumoner)
+            response = requests.get(f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{pseudo}?api_key={riot}")
             if response.status_code == 200:
-                puuidDict[pseudo] = response.json()["puuid"]
-                url_dernierMatch =  f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{response.json()['puuid']}/ids?start=0&count=1&api_key={riot}"
-                response_drMatch = requests.get(url_dernierMatch)
+                response_drMatch = requests.get(f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{response.json()['puuid']}/ids?start=0&count=1&api_key={riot}")
                 if response_drMatch.status_code == 200:
-                    dernier_matchDict[puuidDict[pseudo]] = response_drMatch.json()[0]
-                    await ctx.send(pseudo + " a bien été ajouté")
+                    response_rang = requests.get(f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{response.json()['id']}?api_key={riot}")
+                    if response_rang.status_code == 200:
+                        puuidDict[pseudo] = {'puuid' : response.json()['puuid'], 
+                                             'summonerId' : response.json()['id'],
+                                             'dernierMatch' : response_drMatch.json()[0], 
+                                             'channel' : channel.id, 
+                                             'LP' : response_rang.json()[0]['leaguePoints'], 
+                                             'rank' : response_rang.json()[0]['rank'], 
+                                             'tier' : response_rang.json()[0]['tier']
+                                            }
+                        
+                        await ctx.send(pseudo + " a bien été ajouté")
+                    else:
+                        await ctx.send("Erreur lors de la requête du rang : " + str(response_rang.status_code))
                 else:
                     await ctx.send("Erreur lors de la requête du dernier match : " + str(response.status_code))
             else:
                 await ctx.send("Erreur lors de la requête du pseudo : " + str(response.status_code))
-        save_data(puuidDict, dernier_matchDict, channel_id)
+        save_data(puuidDict)
 
     # Remove a player from the dictionnary
     @bot.command()
     async def remove(ctx, pseudo):
         if pseudo in puuidDict.keys():
             del puuidDict[pseudo]
-            del dernier_matchDict[puuidDict[pseudo]]
             await ctx.send(pseudo + " a bien été supprimé")
         else:
             await ctx.send("Ce pseudo n'est pas enregistré")
-        save_data(puuidDict, dernier_matchDict, channel_id)
+        save_data(puuidDict)
 
     # Show the list of players who are watched
     @bot.command()
@@ -138,14 +146,6 @@ def main():
         if(text == ""):
             text = "Aucun pseudo enregistré"
         await ctx.send(text)        
-    
-    # Change the channel where the bot will send the image
-    @bot.command()
-    async def here(ctx):
-        channel = ctx.channel
-        channel_id = channel.id
-        await ctx.send("Le channel de notification est maintenant " + channel.name)
-        save_data(puuidDict, dernier_matchDict, channel_id)
 
     '''
     All 10 seconds, check if the last match of each player is same as stored in the dictionnary
@@ -154,69 +154,92 @@ def main():
     '''
     @tasks.loop(seconds=10)
     async def look_for_last_match():
-        for puuid, dernier_match in dernier_matchDict.items():
-            url_dernierMatch =  f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=1&api_key={riot}"
-            response = requests.get(url_dernierMatch)
+        for pseudo in puuidDict.keys():
+            response = requests.get(f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuidDict[pseudo]['puuid']}/ids?start=0&count=1&api_key={riot}")
             if response.status_code == 200:
                 
-                if dernier_match != response.json()[0]:
-                    url_dernierMatchDiff = f"https://europe.api.riotgames.com/lol/match/v5/matches/{response.json()[0]}?api_key={riot}"
-                    response2 = requests.get(url_dernierMatchDiff)
-                    if channel_id == -1:
-                        channel = discord.utils.get(bot.get_all_channels(), type=discord.ChannelType.text)
-                    else:
-                        channel = bot.get_channel(channel_id)
-                    
+                if puuidDict[pseudo]['dernierMatch'] != response.json()[0]: #if the last match is different
+                    response2 = requests.get(f"https://europe.api.riotgames.com/lol/match/v5/matches/{response.json()[0]}?api_key={riot}")
                     if response2.status_code == 200:
-                        queueId = response2.json()["info"]["queueId"]
-                        type_partie = "" 
-                        if queueId == 420:
-                            type_partie += "a Solo/Duo"
-                        elif queueId == 430:
-                            type_partie += "a Normal Blind"
-                        elif queueId == 400:
-                            type_partie += "a Normal Draft"
-                        elif queueId == 450:
-                            type_partie += "an ARAM"
-                        elif queueId == 440:
-                            type_partie += "a Flex"
-                        elif queueId == 31 or queueId == 32 or queueId == 33:
-                            type_partie += "a Coop vs IA"
-                        else:
-                            text += queueId+" __inconnue__\n"
-                        
-                        pseudo = ''
-
-                        for participant in response2.json()["info"]["participants"]:
-                            if participant["puuid"] == puuid:
-                                pseudo = participant["summonerName"]
-                                embed = discord.Embed(
-                                        title=participant["summonerName"] + " " + ("win" if participant["win"] else "lost") + " " + type_partie,
-                                        color=0xFF0000,
-                                )
-                                embed.add_field(
-                                        name= participant["championName"] + " - " + str(participant["kills"]) + "/" + str(participant["deaths"]) + "/" + str(participant["assists"]),
-                                        value= "CS : "+ str(participant["totalMinionsKilled"]) + " - " + str(participant["goldEarned"]) + " golds",
-                                        inline=True
-                                )
-                                embed.set_thumbnail(
-                                    url=f"http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/{participant['championName']}.png"
-                                )
-                                embed.timestamp = datetime.datetime.now()
+                        response_newRank = requests.get(f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{puuidDict[pseudo]['summonerId']}?api_key={riot}")
+                        if response_newRank.status_code == 200:
+                            queueId = response2.json()["info"]["queueId"] #const wich define the type of game
                             
-                        gameChampImage = crea_Image(response2.json()["info"]["participants"])
-                        imsave(cheminDATA+"temp/assembled_image.png", gameChampImage)
-                        #I must upload the image to cloudinary to get the url because discord doesn't accept local image
-                        cloudinary.uploader.upload(cheminDATA+"temp/assembled_image.png", public_id = "assembled_image", overwrite = True, resource_type = "image")
-                        embed.set_image(url=cloudinary.api.resource("assembled_image")["url"])
-                        
-                        await channel.send(embed=embed)
-                        dernier_matchDict[puuid] = response.json()[0]
-                        print("Nouveau match pour "+pseudo)
-                        save_data(puuidDict, dernier_matchDict, channel_id)
+                            type_partie = "" 
+                            if queueId == 420:
+                                type_partie += "a Solo/Duo"
+                            elif queueId == 430:
+                                type_partie += "a Normal Blind"
+                            elif queueId == 400:
+                                type_partie += "a Normal Draft"
+                            elif queueId == 450:
+                                type_partie += "an ARAM"
+                            elif queueId == 440:
+                                type_partie += "a Flex"
+                            elif queueId == 31 or queueId == 32 or queueId == 33:
+                                type_partie += "a Coop vs IA"
+                            else:
+                                text += queueId+" __inconnue__\n"
+                            
+
+                            for participant in response2.json()["info"]["participants"]:
+                                if participant["puuid"] == puuidDict[pseudo]['puuid']:
+                                    
+                                    text_LP = ""
+                                    if queueId == 420: #if it's a Solo/Duo
+                                        text_LP += "\n"
+                                        lp_Difference = abs(response_newRank.json()[0]['leaguePoints'] - puuidDict[pseudo]['LP'])
+                                        changeRank = False
+                                        
+                                        if puuidDict[pseudo]['rank'] != response_newRank.json()[0]['rank'] :
+                                            changeRank = True
+                                            
+                                        if changeRank:
+                                            if participant["win"]:
+                                                text_LP += f"Promote : {puuidDict[pseudo]['tier']} {puuidDict[pseudo]['rank']} -> {response_newRank.json()[0]['tier']} {response_newRank.json()[0]['rank']}"
+                                            else:
+                                                text_LP += f"Demote : {puuidDict[pseudo]['tier']} {puuidDict[pseudo]['rank']} -> {response_newRank.json()[0]['tier']} {response_newRank.json()[0]['rank']}"
+                                            puuidDict[pseudo]['rank'] = response_newRank.json()[0]['rank']
+                                            puuidDict[pseudo]['tier'] = response_newRank.json()[0]['tier']
+                                             
+                                        else:
+                                            if participant["win"]:
+                                                text_LP += f"LP : +{lp_Difference}"
+                                            else:
+                                                text_LP += f"LP : -{lp_Difference}"
+                                        
+                                        puuidDict[pseudo]['LP'] = response_newRank.json()[0]['leaguePoints']
+                                        
+                                                
+                                    pseudo = participant["summonerName"]
+                                    embed = discord.Embed(
+                                            title=participant["summonerName"] + " " + ("won" if participant["win"] else "lost") + " " + type_partie,
+                                            color=discord.Color.green() if participant["win"] else discord.Color.red()
+                                    )
+                                    embed.add_field(
+                                            name= participant["championName"] + " - " + str(participant["kills"]) + "/" + str(participant["deaths"]) + "/" + str(participant["assists"]),
+                                            value= "CS : "+ str(participant["neutralMinionsKilled"]) + " - " + str(participant["goldEarned"]) + " golds" + text_LP,
+                                            inline=True
+                                    )
+                                    embed.set_thumbnail(
+                                        url=f"http://ddragon.leagueoflegends.com/cdn/13.12.1/img/champion/{participant['championName']}.png"
+                                    )
+                                    embed.timestamp = datetime.datetime.now()
+                                
+                            gameChampImage = crea_Image(response2.json()["info"]["participants"])
+                            imsave(cheminDATA+"temp/assembled_image.png", gameChampImage)
+                            #I must upload the image to cloudinary to get the url because discord doesn't accept local image
+                            cloudinary.uploader.upload(cheminDATA+"temp/assembled_image.png", public_id = "assembled_image", overwrite = True, resource_type = "image")
+                            embed.set_image(url=cloudinary.api.resource("assembled_image")["url"])
+                            
+                            await bot.get_channel(puuidDict[pseudo]['channel']).send(embed=embed)
+                            puuidDict[pseudo]['dernierMatch']= response.json()[0]
+                            print("Nouveau match pour "+pseudo)
+                            save_data(puuidDict)
+                        else:
+                            print("Erreur lors de la requête du nouveau rank : " + str(response_newRank.status_code))
                     else:
                         print("Erreur lors de la requête du dernier match différent : " + str(response.status_code))
-                
                 else:
                     print("Pas de nouveau match")
             else:
