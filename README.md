@@ -1,3 +1,5 @@
+#!Last commit change a lot of thing, this readme is now incomplete! 
+
 # SpyGame-Discord-bot - EN
 
 The principle of the bot is simple:
