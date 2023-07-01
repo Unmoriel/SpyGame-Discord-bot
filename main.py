@@ -136,6 +136,8 @@ def main():
     parisEnCours = dict(dataD['parisEnCours'])# {'gameId' : {'Win' : [], 'Loose' : []}}
     discordUser = dict(dataD['discordUser']) # {'userId' : {'name' : str, 'nbWin' : int, 'nbDef' : int}}
     channelParis = dataD['channel'] #int
+    
+    flag = False #Permet de savoir si une fonction est entrain de parcourir le dictionnaire
 
     
     # When the discord bot is ready
@@ -154,7 +156,7 @@ def main():
         elif interaction.user.id in parisEnCours[gameId]['Loose']:
             await interaction.response.send_message("Vous avez déjà voté 'Loose' pour ce paris !", ephemeral=True)
         else:
-            if not(interaction.user.id in discordUser.keys()):
+            if discordUser.get(str(interaction.user.id)) == None:
                 discordUser[interaction.user.id] = {'name' : interaction.user.display_name, 'nbWin' : 0, 'nbDef' : 0}
             
             parisEnCours[gameId][button.label].append(interaction.user.id)      
@@ -165,7 +167,7 @@ def main():
             
     
     @bot.event
-    async def parisFini(pseudo : str, win : bool, gameId : int):
+    async def parisFini(pseudo : str, win : bool, gameId : str):
         if gameId not in parisEnCours.keys():
             print(f'Paris {gameId} non trouvé')
             return None
@@ -184,12 +186,12 @@ def main():
         for gagnant in gagnantL:
             user = await bot.fetch_user(gagnant)
             text_gagnant += user.display_name+"\n"
-            discordUser[gagnant]["nbWin"] += 1
+            discordUser[str(gagnant)]["nbWin"] += 1
         
         for perdant in perdantL:
             user = await bot.fetch_user(perdant)
             text_perdant += user.display_name+"\n"
-            discordUser[perdant]["nbDef"] += 1
+            discordUser[str(perdant)]["nbDef"] += 1
         
         embed = discord.Embed(
             title="Paris terminé !",
@@ -207,7 +209,7 @@ def main():
             inline=True
             )
         embed.timestamp = datetime.datetime.now()
-        await bot.get_channel(discordUser["channel"]).send(embed=embed)
+        await bot.get_channel(channelParis).send(embed=embed)
         del parisEnCours[gameId]
         
             
@@ -249,6 +251,7 @@ def main():
         user = await bot.fetch_user(244758152858304514)
         await ctx.respond(user.display_name) 
     
+    #A refaire 
     @bot.command()
     async def leaderboard(ctx : discord.ApplicationContext):
         text_l = ""
@@ -409,7 +412,7 @@ def main():
                             
                             await bot.get_channel(puuidDict[pseudo]['channel']).send(embed=embed)
                             if gameId == puuidDict[pseudo]['matchEnCours']:
-                                await parisFini(pseudo, win, gameId)
+                                await parisFini(pseudo, win, str(gameId))
                             
                             puuidDict[pseudo]['dernierMatch'] = response.json()[0]
                             print("Nouveau match pour "+pseudo)
@@ -455,7 +458,7 @@ def main():
                     puuidDict[pseudo]['matchEnCours'] = reponse.json()['gameId']
                     if channelParis != None:
                         parisEnCours[reponse.json()['gameId']] = {'Win' : [], 'Loose' : []} #Création du paris
-                        await bot.get_channel(discordUser['channel']).send(embed=embed, view=ViewParis(timeout=300, gameId=reponse.json()['gameId'], pseudo=pseudo))
+                        await bot.get_channel(channelParis).send(embed=embed, view=ViewParis(timeout=300, gameId=reponse.json()['gameId'], pseudo=pseudo))
 
                     save_data(puuidDict) #Je ne sauvegarde pas le paris tout de suite
                 else:
