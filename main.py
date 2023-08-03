@@ -22,7 +22,7 @@ urlChamionsImage = "http://ddragon.leagueoflegends.com/cdn/13.13.1/img/champion/
 
 '''
 Return the api key from the a json file (in local)
-which is not in the git repository (here it's in a folder named "data"
+which is not in the git repository (here it's in a folder named "data" oui
 in the parent folder's project and his name is "apiKey.json")
 '''
 def get_api_key(riot, discord_k, cloudinary_k):
