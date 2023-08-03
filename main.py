@@ -14,7 +14,7 @@ import datetime
 import asyncio
 
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
-cheminDATA = path.dirname(chemin) + "/data/" #Chemin faire le fichier data 
+cheminDATA = chemin + "/data/" #Chemin faire le fichier data 
 #Si vous voulez les grandes lignes des stats des persos de LoL c'est là : (pensez à changer les nombres selon le patch)
 urlChampionsData = "https://ddragon.leagueoflegends.com/cdn/13.13.1/data/en_US/champion.json" 
 urlChamionsImage = "http://ddragon.leagueoflegends.com/cdn/13.13.1/img/champion/" #Les images des persos de LoL
