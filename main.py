@@ -239,7 +239,7 @@ def main():
     class ViewParis(discord.ui.View): 
 
         #J'ai besoin de passer la gameId et le pseudo donc je refais le init en appelant celui de la classe mère
-        def __init__(self, *items: Item, timeout: float | None = 180, disable_on_timeout: bool = False, gameId : int, pseudo : str):
+        def __init__(self, *items: Item, timeout: float = 180, disable_on_timeout: bool = False, gameId : int, pseudo : str):
             super().__init__(*items, timeout=timeout, disable_on_timeout=disable_on_timeout)
             self.gameId = gameId
             self.pseudo = pseudo
