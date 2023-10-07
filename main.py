@@ -4,7 +4,6 @@ from os import path
 import cloudinary 
 import cloudinary.uploader
 import cloudinary.api
-from discord.ui.item import Item
 from matplotlib.image import imsave
 from numpy import concatenate 
 from PIL import Image
@@ -159,7 +158,7 @@ def main():
 
     @bot.command(description="Sends the bot's latency.") 
     async def ping(ctx): 
-        await ctx.respond(f"Pong! Latency is : {bot.latency}")
+        await ctx.respond(f"Pong! Latency is : {bot.latency} ms")
     
     # Append a player in the dictionnary to watch him
     @bot.command()
@@ -247,7 +246,7 @@ def main():
         await ctx.respond(text)
 
     '''
-    All 10 seconds, check if the last match of each playcer is same as stored in the dictionnary
+    All 13 seconds, check if the last match of each playcer is same as stored in the dictionnary
     If it's not the same, send a embed message in the discord 
     and update the dictionnary
     '''

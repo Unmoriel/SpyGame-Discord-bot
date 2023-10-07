@@ -1,4 +1,4 @@
-#!Last commit change a lot of thing, this readme is now incomplete! 
+<h1>!This readme is currently being rewritten, so only the French version is correct at the moment.!</h1>
 
 # SpyGame-Discord-bot - EN
 
@@ -12,7 +12,7 @@ You can view the list of people the bot follows using the */list* command and re
 
 I provide only the code and explain how to set it up, but you must host the bot yourself.
 
-I also assume that you already know how to set up a Discord bot, otherwise everything is well explained by Discord itself.
+I also assume that you already know how to set up a Discord bot, otherwise everything is well explained by Discord themself.
 
 *******
 
@@ -77,61 +77,55 @@ Command :
 username is your League of Legend username do not confuse it with your riot id
 
 ********************
-# SpyGame-Discord-bot - FR
+<h1> SpyGame-Discord-bot - FR</h1>
 
-Le principe du bot est simple :
+<h4>Résumé :</h4>
+<p>
+Ce bot permet de voir le résultat des parties de LoL de n'importe qui tant que vous avez son pseudo. À chaque fin de game le bot envoie un message contenant un résumé de la partie
+<p>
 
-Vous l'ajoutez au serveur, vous ajoutez dans la liste du bot grâce à la commande */add 'votre_pseudo_lol'*. 
+<h4>Précisions :</h4>
+<p>
+Je ne suis pas un développeur pro.
+<br>
+Je vous fournit un code qui vous permet de faire fonctionner un bot discord. Je ne vous explique pas comment en créer un.
+<br>
+Le bot et la base de données ne sont pas destinés à suivre une grande quantité de joueur. Le bot peut supporter de base une dizaine de personnes, mais vous pouvez augmenter jusqu'à 20 - 25 si vous optimisez le code.
+<br>
+Enfin, le plus grand inconvénient du bot est la nécessité d'obtenir une clé API "personal" ou "production". La clé "personal" est celle que je recommande. Elle ne débloque pas le plafond de requêtes maximums mais c'est la plus simple à avoir. Personnellement, je l'ai obtenu en un peu moins de deux semaines en mettant ce projet Github en lien.
+</p>
 
-Ensuite, dès que vous terminez une partie, il envoie un message dans un canal en résumant votre partie. 
+<h3>Librairies pythons nécessaires :</h3>
 
-Vous pouvez voir la liste des personnes que le bot suit grâce à la commande */liste* et supprimer quelqu'un grâce à la commande */remove 'votre_pseudo_lol'*.
-
-Je fournis uniquement le code et vous explique comment le mettre en place, mais vous devez héberger vous-même le bot.
-
-Je pars aussi du principe que vous savez déjà comment mettre en place un bot Discord, sinon tout est très bien expliqué par Discord lui-même.
-
-*******
-
-Librairies Python dont vous avez besoin :
+* Python 3.11
 * discord
 * os
-* cloudinary (necessaire car discord n'accepte que les images qui sont stocké sur internet)
+* cloudinary 
 * matplotlib.image
 * numpy
 * requests
 * json
 * datetime
 
-*******
+<h3>API nécessaires :</h3>
 
-API nécessaires :
 * Riot Games
 * Discord
 * cloudinary
 
-*******
 
-Pour mettre en place le bot, voici l'arborescence de fichiers que vous devez avoir :
+<h2>Préparation</h2>
 
-*botFile*<br>
--> *SpyBot*<br>
--> -> main.py<br>
--> data<br>
--> -> champion<br>
--> -> -> ...<br>
--> -> other<br>
--> -> temp<br>
--> -> apiKey.json<br>
+<p>Pour l'API de Riot Game, vous allez devoir demander une clé produit ou personnel sur leur site : <a>https://developer.riotgames.com/</a> </p>
 
-Les noms des dossiers/fichiers qui ne sont pas en italiques ne doivent pas être changés.
-main.py est le fichier du bot, qui se trouve dans ce répertoire git.
-Dans le dossier data :
-Le dossier champions se trouve dans le fichier compressé que vous pouvez trouver à ce lien :
-https://developer.riotgames.com/docs/lol#data-dragon
-others est le dossier qui se trouve dans le répertoire git (il contient des images utiles)
-temp est un dossier qui contiendra des fichiers temporaires pour le bot (il est vide de base)
-apikey.json est un fichier JSON qui contient les clés des API nécessaires. Il se construit de la manière suivante :
+<p>Pour l'API de discord, vous devez mettre en place un bot. C'est expliqué par exemple ans la documentation de Pycord : <a>https://guide.pycord.dev/introduction</a></p>
+
+<p>Enfin, j'utilise cloudinary pour stocker des images sur Internet. Cela me permet de pouvoir les mettre dans les messages "embed" de Discord. Il suffit de créer un compte gratuit : <a>https://cloudinary.com/</a> </p>
+
+<h2>Installation</h2>
+
+<p>Clonez le dépôt Github et remplissez le fichier 'apiKeys.json' qui se trouve dans le dossier data.
+Il se construit de la manière suivante : <br>
 { <br>
 "discord": "key", <br>
 "riot":"key",<br>
@@ -142,13 +136,21 @@ apikey.json est un fichier JSON qui contient les clés des API nécessaires. Il 
 }<br>
 }<br>
 
-Pour ce qui est du fonctionnement du bot, je vous laisse le soin de regarder le code, il est normalement suffisamment commenté.
+Il vous faut remplacer les 'key' par les clés d'API correspondante (Discord appelle cela un Token). Attention, les clés d'API sont des données sensibles.
+</p>
 
-Commandes :
+<h2>Lancement</h2>
+<p>Exécutez avec python le fichier main.py. Le bot doit s'afficher comme connecté. Les commandes peuvent mettre un peu de temps à apparaître.</p>
 
-* /add pseudo : (ajoute ton pseudo à la liste des joueurs pour lesquels le bot surveille l'historique)
-* /remove pseudo : (enlève ton pseudo de cette liste)
-* /list : renvoie la liste de tous les pseudos dont le bot surveille l'historique
-* /here : commande à exécuter dans le salon textuel où tu veux que le bot envoie les messages de victoire ou de défaite (par défaut, le bot utilise le premier canal textuel de ton serveur).
+<p>Pour ce qui est du fonctionnement du bot, je vous laisse le soin de regarder le code dans main.py. J'ai commenté les fonctions principales en anglais, mais les commentaires plus précis sont en français (désolé).</p>
 
-pseudo corresond à votre pseudo League of Legend (et pas forcement votre riot id)
+<h2>Commandes :</h2>
+
+<ul>
+    <li><b>/add</b> "pseudo" "channel" <br>Vous ajoute à la base de données du bot. C'est-à-dire que dès que vous ferez une game, le résultat sera envoyer dans le channel discord que vous avez entrer.</li>
+    <li><b>/remove</b> "pseudo"<br>Supprime votre pseudo de la base de données (et toutes les informations qui vont avec elle). Une auto-complétion sur tous les pseudo de base de données est disponible. </li>
+    <li><b>/list</b><br>Affiche la liste des pseudo enregistrés dans la base de données.</li>
+    <li><b>/ping</b><br>Affiche la latence du bot.</li>
+</ul>
+
+<p>"pseudo" correspond à votre nom d'invocateur en jeu. Pas forcément à votre Riot ID qui peut-être différent.</p>
