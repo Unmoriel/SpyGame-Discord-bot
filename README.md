@@ -1,22 +1,21 @@
-<h1>!This readme is currently being rewritten, so only the French version is correct at the moment.!</h1>
+<h1> SpyGame-Discord-bot - EN</h1>
+<h4>Summary:</h4>
+<p>
+This bot allows you to view the results of League of Legends games for anyone as long as you have their username. After each game ends, the bot sends a message containing a summary of the game.
+</p>
+<h4>Details:</h4>
+<p>
+I am not a professional developer.
+<br>
+I am providing you with code that allows you to operate a Discord bot. I will not explain how to create one.
+<br>
+The bot and the database are not intended to track a large number of players. The bot can support about ten people by default, but you can increase it to 20 - 25 if you optimize the code.
+<br>
+Finally, the biggest drawback of the bot is the need to obtain a "personal" or "production" API key. The "personal" key is the one I recommend. It does not unlock the maximum request limit, but it is the easiest to obtain. Personally, I obtained it in just under two weeks by linking this GitHub project.
+</p>
+<h3>Required Python Libraries:</h3>
 
-# SpyGame-Discord-bot - EN
-
-The principle of the bot is simple:
-
-You add it to the server, you add yourself to the bot's list using the */add 'your_lol_username'* command.
-
-Then, whenever you finish a game, it sends a message to a channel summarizing your game.
-
-You can view the list of people the bot follows using the */list* command and remove someone using the */remove 'your_lol_username'* command.
-
-I provide only the code and explain how to set it up, but you must host the bot yourself.
-
-I also assume that you already know how to set up a Discord bot, otherwise everything is well explained by Discord themself.
-
-*******
-
-Python libraries required:
+* Python 3.11
 * discord
 * os
 * cloudinary
@@ -26,35 +25,27 @@ Python libraries required:
 * json
 * datetime
 
-*******
+<h3>Required APIs:</h3>
 
-Required APIs:
 * Riot Games
 * Discord
 * cloudinary
 
-*******
+<h2>Preparation</h2>
 
-To set up the bot, here is the file structure you should have:
+<p>For the Riot Games API, you will need to request a product or personal key on their website: <a>https://developer.riotgames.com/</a> 
+</p>
 
-*botFile*<br>
--> *SpyBot*<br>
--> -> main.py<br>
--> data<br>
--> -> champion<br>
--> -> -> ...<br>
--> -> other<br>
--> -> temp<br>
--> -> apiKey.json<br>
+<p>For the Discord API, you need to set up a bot. This is explained, for example, in the Pycord documentation: <a>https://guide.pycord.dev/introduction</a>
+</p>
 
-The names of the non-italicized folders/files should not be changed.
-main.py is the bot's file, which is located in this git repository.
-In the data folder:
-The champions folder is located in the compressed file that you can find at this link:
-https://developer.riotgames.com/docs/lol#data-dragon
-others is the folder located in the git repository (it contains useful images)
-temp is a folder that will contain temporary files for the bot (it is empty by default)
-apikey.json is a JSON file that contains the necessary API keys. It is structured as follows:
+<p>Finally, I use cloudinary to store images on the Internet. This allows me to include them in Discord "embed" messages. Just create a free account: <a>https://cloudinary.com/</a> 
+</p>
+
+<h2>Installation</h2>
+
+<p>Clone the GitHub repository and fill in the 'apiKeys.json' file located in the data folder.
+It is constructed as follows: <br>
 { <br>
 "discord": "key", <br>
 "riot":"key",<br>
@@ -64,17 +55,20 @@ apikey.json is a JSON file that contains the necessary API keys. It is structure
 "api_secret" :"key"<br>
 }<br>
 }<br>
+You need to replace the 'key' with the corresponding API keys (Discord calls this a Token). Note that API keys are sensitive data.
 
-As for how the bot works, I leave it to you to look at the code, as it is usually sufficiently commented.
-
-Command :
-
-* /add username: (adds your username to the list of players for which the bot monitors the history)
-* /remove username: (removes your username from this list)
-* /list: returns the list of all usernames that the bot monitors the history for
-* /here: command to be executed in the text channel where you want the bot to send win or loss messages (by default, the bot uses the first text channel of your server).
-
-username is your League of Legend username do not confuse it with your riot id
+</p>
+<h2>Launch</h2>
+<p>Run the main.py file with Python. The bot should appear as connected. Commands may take a bit of time to appear.</p>
+<p>As for how the bot works, I'll let you look at the code in main.py. I've commented on the main functions in English, but more detailed comments are in French (sorry).</p>
+<h2>Commands:</h2>
+<ul>
+    <li><b>/add</b> "username" "channel" <br>Adds you to the bot's database. This means that as soon as you play a game, the result will be sent to the Discord channel you specified.</li>
+    <li><b>/remove</b> "username"<br>Removes your username from the database (along with all associated information). Autocompletion is available for all usernames in the database. </li>
+    <li><b>/list</b><br>Displays a list of usernames stored in the database.</li>
+    <li><b>/ping</b><br>Displays the bot's latency.</li>
+</ul>
+<p>"username" corresponds to your in-game summoner name, not necessarily your Riot ID, which may be different.</p>
 
 ********************
 <h1> SpyGame-Discord-bot - FR</h1>
