@@ -25,6 +25,10 @@ def new_MAJ():
         
         if version == old_version:
             print("Pas de MAJ")
+            return False
+        
+        print("Erreur MAJ différente non prévue")
+        exit(1)
     
     except:
         print("MAJ de la structur des données en 1.0")
@@ -33,6 +37,7 @@ def new_MAJ():
         with open(cheminDATA + "version.txt", "w") as file:
             file.write(str(version))
         print("fichier de version créer")
+        return True
 
         
             
