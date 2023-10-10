@@ -24,7 +24,7 @@ def to_1_0():
         data[pseudo]['RANKED_FLEX_SR'] = {"LP": None, "rank": None, "tier": None}
         data[pseudo]['RANKED_SOLO_5x5'] = {"LP": None, "rank": None, "tier": None}
         
-        data[pseudo]['dernierMatch'] = ''
+        data[pseudo]['dernierMatch'] = "0"
     
     with open(cheminDATA+"data.json", "w") as file:
         json.dump(data, file)

@@ -12,6 +12,7 @@ import json
 import datetime
 import asyncio
 
+
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
 cheminDATA = chemin + "/data/" #Chemin faire le fichier data 
 version = 1.0
@@ -229,6 +230,11 @@ def main():
 
     # Dictionnary where data of players are stored (in local)
     puuidDict = load_data() 
+    
+    #On remet à jour les données si il y a eu une MAJ de la structure
+    if new_MAJ():
+        puuidDict = load_data()
+    
 
     flag = False #Permet de savoir si une fonction est entrain de parcourir le dictionnaire
     
@@ -236,7 +242,6 @@ def main():
     # When the discord bot is ready
     @bot.event
     async def on_ready():
-        new_MAJ()
         check_new_patch.start()
         look_for_last_match.start()
         print(f'Connecté en tant que {bot.user.name}')
