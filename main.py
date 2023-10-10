@@ -14,8 +14,27 @@ import asyncio
 
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
 cheminDATA = chemin + "/data/" #Chemin faire le fichier data 
+version = 1.0
 
+def new_MAJ():
+    try:
+        old_version = ""
+        with open(cheminDATA + "version.txt", 'rb') as file:
+            old_version = file.read()
+        
+        if version == old_version:
+            print("Pas de MAJ")
+    
+    except:
+        print("MAJ de la structur des données en 1.0")
+        from algo_maj import to_1_0
+        print("MAJ terminée")
+        with open(cheminDATA + "version.txt", "w") as file:
+            file.write(str(version))
+        print("fichier de version créer")
 
+        
+            
 def new_patch():
     requete = requests.get("https://ddragon.leagueoflegends.com/api/versions.json")
     if requete.status_code == 200:
@@ -96,6 +115,74 @@ def gameType(queueId):
     
     return type_partie
 
+def crea_dict_player(rank : list, info : dict, last_match : str, channel_id):
+    profil = {'puuid' : info['puuid'], 
+            'summonerId' : info['id'],
+            'dernierMatch' : last_match, 
+            'channel' : channel_id, 
+            'win_total' : 0,
+            'win_week' : 0,
+            'loose_total' : 0,
+            'loose_week' : 0,
+            'RANKED_FLEX_SR' : { 
+                'LP' : None, 
+                'rank' : None, 
+                'tier' : None
+                },
+            'RANKED_SOLO_5x5' : {                                                        
+                'LP' : None, 
+                'rank' : None, 
+                'tier' : None
+                }
+            }
+    
+    for queue in rank:
+        profil[queue["queueType"]]["LP"] = queue["leaguePoints"]
+        profil[queue["queueType"]]["rank"] = queue["rank"]
+        profil[queue["queueType"]]["tier"] = queue["tier"]
+            
+ 
+    return profil
+            
+def update_rank(old_rank : dict, queue : dict, win : bool, queueType : str):
+    text_LP = "\n"
+
+    
+    if old_rank[queueType]['LP'] is None :
+        old_rank[queueType]['rank'] = queue['rank']
+        old_rank[queueType]['tier'] = queue['tier']
+        old_rank[queueType]['LP'] = queue['leaguePoints']
+        text_LP += f"{queue['tier']} {queue['rank']} - {queue['leaguePoints']} LP"
+        
+    else :
+        lp_Difference = abs(queue['leaguePoints'] - old_rank[queueType]['LP'])
+        changeRank = False
+                                            
+        if old_rank[queueType]['rank'] != queue['rank'] :
+            changeRank = True
+                                                
+        if changeRank:
+            if win:
+                text_LP += f"Promote : {old_rank[queueType]['tier']} {old_rank[queueType]['rank']} -> {queue['tier']} {queue['rank']}"
+            else:
+                text_LP += f"Demote : {old_rank[queueType]['tier']} {old_rank[queueType]['rank']} -> {queue['tier']} {queue['rank']}"
+                old_rank[queueType]['rank'] = queue['rank']
+                old_rank[queueType]['tier'] = queue['tier']
+                                                
+        else:
+            if win:
+                text_LP += f"LP : +{lp_Difference}"
+            else:
+                text_LP += f"LP : -{lp_Difference}"
+                                                
+            text_LP += f" ({old_rank[queueType]['tier']} {old_rank[queueType]['rank']} - {queue['leaguePoints']} LP)"
+                                            
+            old_rank[queueType]['LP'] = queue['leaguePoints']
+
+    return old_rank, text_LP
+                
+    
+
 '''
 Load data from the json file
 If he doesn't exist, the function create it
@@ -141,15 +228,15 @@ def main():
     bot = discord.Bot()
 
     # Dictionnary where data of players are stored (in local)
-    puuidDict = load_data() # puuidDict = {pseudo : {'puuid' : puuid, 'summonerId' : summonerId 'dernierMatch' : dernierMatch, 'channel' : channel_id, 'LP' : LP,
-                            #  'rank' : rank, 'tier' : tier, 'matchEnCours' : gameId}}
-        
+    puuidDict = load_data() 
+
     flag = False #Permet de savoir si une fonction est entrain de parcourir le dictionnaire
     
     
     # When the discord bot is ready
     @bot.event
     async def on_ready():
+        new_MAJ()
         check_new_patch.start()
         look_for_last_match.start()
         print(f'Connecté en tant que {bot.user.name}')
@@ -177,26 +264,10 @@ def main():
                         if response_drMatch.status_code == 200:
                             response_rang = requests.get(f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{response.json()['id']}?api_key={riot}")
                             if response_rang.status_code == 200:
-                                if response_rang.json() == []:
-                                    puuidDict[pseudo] = {'puuid' : response.json()['puuid'], 
-                                                        'summonerId' : response.json()['id'],
-                                                        'dernierMatch' : response_drMatch.json()[0], 
-                                                        'channel' : channel.id, 
-                                                        'LP' : None, 
-                                                        'rank' : None, 
-                                                        'tier' : None,
-                                                        'matchEnCours' : 0
-                                                        }
-                                else:
-                                    puuidDict[pseudo] = {'puuid' : response.json()['puuid'], 
-                                                        'summonerId' : response.json()['id'],
-                                                        'dernierMatch' : response_drMatch.json()[0], 
-                                                        'channel' : channel.id, 
-                                                        'LP' : response_rang.json()[0]['leaguePoints'], 
-                                                        'rank' : response_rang.json()[0]['rank'], 
-                                                        'tier' : response_rang.json()[0]['tier'],
-                                                        'matchEnCours' : 0
-                                                        }
+                                puuidDict[pseudo] = crea_dict_player(response_rang.json(), 
+                                                                     response.json(), 
+                                                                     response_drMatch.json()[0], 
+                                                                     channel.id)
                                 
                                 await ctx.respond(pseudo + " a bien été ajouté")
                             else:
@@ -265,7 +336,6 @@ def main():
                         response_newRank = requests.get(f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{puuidDict[pseudo]['summonerId']}?api_key={riot}")
                         if response_newRank.status_code == 200:
                             queueId = response2.json()["info"]["queueId"] #const wich define the type of game
-                            gameId = response2.json()["info"]['gameId']
                             type_partie = gameType(queueId)
                             win = False
                             
@@ -276,40 +346,21 @@ def main():
 
                                     print("Verification de la game...")
                                     text_LP = ""
-                                    if queueId == 420 and response_newRank.json() != []: #if it's a Solo/Duo
-                                        text_LP += "\n"
+                                    if (queueId == 420 or queueId == 440) and response_newRank.json() != []: #if it's a Solo/Duo or a flex
+                                        queueType = "RANKED_SOLO_5x5" if queueId == 420 else "RANKED_FLEX_SR"
                                         
-                                        if puuidDict[pseudo]['LP'] == None :
-                                            puuidDict[pseudo]['rank'] = response_newRank.json()[0]['rank']
-                                            puuidDict[pseudo]['tier'] = response_newRank.json()[0]['tier']
-                                            puuidDict[pseudo]['LP'] = response_newRank.json()[0]['leaguePoints']
-                                            text_LP += f"{response_newRank.json()[0]['tier']} {response_newRank.json()[0]['rank']} {response_newRank.json()[0]['leaguePoints']}"
-                                        else :
-                                            lp_Difference = abs(response_newRank.json()[0]['leaguePoints'] - puuidDict[pseudo]['LP'])
-                                            changeRank = False
-                                            
-                                            if puuidDict[pseudo]['rank'] != response_newRank.json()[0]['rank'] :
-                                                changeRank = True
-                                                
-                                            if changeRank:
-                                                if participant["win"]:
-                                                    text_LP += f"Promote : {puuidDict[pseudo]['tier']} {puuidDict[pseudo]['rank']} -> {response_newRank.json()[0]['tier']} {response_newRank.json()[0]['rank']}"
-                                                else:
-                                                    text_LP += f"Demote : {puuidDict[pseudo]['tier']} {puuidDict[pseudo]['rank']} -> {response_newRank.json()[0]['tier']} {response_newRank.json()[0]['rank']}"
-                                                puuidDict[pseudo]['rank'] = response_newRank.json()[0]['rank']
-                                                puuidDict[pseudo]['tier'] = response_newRank.json()[0]['tier']
-                                                
-                                            else:
-                                                if win:
-                                                    text_LP += f"LP : +{lp_Difference}"
-                                                else:
-                                                    text_LP += f"LP : -{lp_Difference}"
-                                                
-                                                text_LP += f" ({puuidDict[pseudo]['tier']} {puuidDict[pseudo]['rank']} - {response_newRank.json()[0]['leaguePoints']} LP)"
-                                            
-                                            puuidDict[pseudo]['LP'] = response_newRank.json()[0]['leaguePoints']
-                                        
+                                        for queue in response_newRank.json():
+                                            if queue["queueType"] == queueType:
+                                                puuidDict[pseudo], text_LP = update_rank(puuidDict[pseudo], queue, win, queueType)
+                                                                            
+                                    if win:
+                                        puuidDict[pseudo]['win_total'] += 1
+                                        puuidDict[pseudo]['win_week'] += 1
+                                    else:
+                                        puuidDict[pseudo]['loose_total'] += 1
+                                        puuidDict[pseudo]['loose_week'] += 1
                                     
+                                        
                                     print("Création du message...")
                                     embed = discord.Embed(
                                             title=participant["summonerName"] + " " + ("won" if win else "lost") + " " + type_partie,
