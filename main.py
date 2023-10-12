@@ -294,9 +294,9 @@ def main():
     scheduler.add_job(
         week_recap,
         trigger="cron",
-        day_of_week="fri",
-        hour=1,  
-        minute=13,
+        day_of_week="sun",
+        hour=20,  
+        minute=00,
         timezone="Europe/Paris"
     )
             

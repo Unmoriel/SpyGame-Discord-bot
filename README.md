@@ -24,6 +24,7 @@ Finally, the biggest drawback of the bot is the need to obtain a "personal" or "
 * requests
 * json
 * datetime
+* apscheduler
 
 <h3>Required APIs:</h3>
 
@@ -67,6 +68,8 @@ You need to replace the 'key' with the corresponding API keys (Discord calls thi
     <li><b>/remove</b> "username"<br>Removes your username from the database (along with all associated information). Autocompletion is available for all usernames in the database. </li>
     <li><b>/list</b><br>Displays a list of usernames stored in the database.</li>
     <li><b>/ping</b><br>Displays the bot's latency.</li>
+    <li><b>/start_recap</b> "channel"<br>Activates a weekly recap every Sunday at 8 p.m. in the "channel" channel</li>
+    <li><b>/stop_bot or /start_bot</b><br>Stops or starts the search for a new match for all players in the database. The recap of the week remains activated.</li>
 </ul>
 <p>"username" corresponds to your in-game summoner name, not necessarily your Riot ID, which may be different.</p>
 
@@ -100,6 +103,7 @@ Enfin, le plus grand inconvénient du bot est la nécessité d'obtenir une clé 
 * requests
 * json
 * datetime
+* apscheduler
 
 <h3>API nécessaires :</h3>
 
@@ -145,6 +149,8 @@ Il vous faut remplacer les 'key' par les clés d'API correspondante (Discord app
     <li><b>/remove</b> "pseudo"<br>Supprime votre pseudo de la base de données (et toutes les informations qui vont avec elle). Une auto-complétion sur tous les pseudo de base de données est disponible. </li>
     <li><b>/list</b><br>Affiche la liste des pseudo enregistrés dans la base de données.</li>
     <li><b>/ping</b><br>Affiche la latence du bot.</li>
+    <li><b>/start_recap</b> "channel"<br>Active un recap hebdomadaire tout les dimanches à 20h dans le channel "channel"</li>
+    <li><b>/stop_bot or /start_bot</b><br>Coupe ou lance la recherche de nouveau match pour tout les joueurs de la base données. Le recap de la semaine reste activé.</li>
 </ul>
 
 <p>"pseudo" correspond à votre nom d'invocateur en jeu. Pas forcément à votre Riot ID qui peut-être différent.</p>
