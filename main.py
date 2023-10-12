@@ -11,11 +11,16 @@ import requests
 import json
 import datetime
 import asyncio
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+
+#todo :
+# - Gerer le cas des Remake 
+# - Ajouter le recap de la semaine
 
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
 cheminDATA = chemin + "/data/" #Chemin faire le fichier data 
-version = 1.0
+version = "1.0"
 
 def new_MAJ():
     try:
@@ -23,7 +28,7 @@ def new_MAJ():
         with open(cheminDATA + "version.txt", 'rb') as file:
             old_version = file.read()
         
-        if version == old_version:
+        if version == old_version.decode():
             print("Pas de MAJ")
             return False
         
@@ -194,27 +199,40 @@ Load data from the json file
 If he doesn't exist, the function create it
 '''
 def load_data():
+    data = {}
+    discord_data = {}
+    
     try:
         with open(cheminDATA + "data.json", 'rb') as file:
             data = json.load(file)
         print("Données chargées")
-        return data
-    
     except:
-        data = {}
         save_data({})
         print("Fichier données créé")
-        return {}
+        
+    try:
+        with open(cheminDATA + "discord_data.json", 'rb') as file:
+            discord_data = json.load(file)
+        print("Données discord chargées")
+    except:
+        save_data(discord_data = {})
+        print("Fichier données discord créé")
+    
+    return data, discord_data
 
 '''
 Save data in the json file
 Default is set on None if you want save only one file
 '''
-def save_data(puuidDict = None):
+def save_data(puuidDict = None, discord_data = None):
     
     if puuidDict != None:
         with open(cheminDATA + "data.json", 'w') as file:
                 json.dump(puuidDict, file)
+    
+    if discord_data != None:
+        with open(cheminDATA+"discord_data.json", 'w') as file:
+            json.dump(discord_data, file)
     
     print("Données sauvegardées")
     
@@ -229,16 +247,18 @@ def main():
         api_secret = cloudinary_k["api_secret"],
         secure = True
     )
+    
+
 
     
     bot = discord.Bot()
-
     # Dictionnary where data of players are stored (in local)
-    puuidDict = load_data() 
+    puuidDict, channels = load_data() 
     
     #On remet à jour les données si il y a eu une MAJ de la structure
     if new_MAJ():
-        puuidDict = load_data()
+        puuidDict, channels = load_data()
+        
     
 
     flag = False #Permet de savoir si une fonction est entrain de parcourir le dictionnaire
@@ -250,12 +270,72 @@ def main():
         check_new_patch.start()
         look_for_last_match.start()
         print(f'Connecté en tant que {bot.user.name}')
+    
+    async def week_recap():
+        print("Envoie du recap de la semaine")
+        embed = discord.Embed(
+            title="Week recap",
+            color=discord.Color.blue()
+            )
+        for pseudo in puuidDict:
+            totalGameWeek = puuidDict[pseudo]['win_week'] + puuidDict[pseudo]['loose_week']
+            winRateWeek = round(puuidDict[pseudo]['win_week'] / totalGameWeek * 100)
+        
+            embed.add_field(
+                name= pseudo,
+                value= f"{puuidDict[pseudo]['win_week']} win {puuidDict[pseudo]['loose_week']} loose - {winRateWeek}% winrate",
+                inline=True
+            )
+            
+        await bot.get_channel(channels['recap']).send(embed=embed)
 
-
-
+    schedule_flag = False #Allow to know if the scheduler is already running
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        week_recap,
+        trigger="cron",
+        day_of_week="fri",
+        hour=1,  
+        minute=13,
+        timezone="Europe/Paris"
+    )
+            
+    
+    @bot.command(name="start_recap")
+    async def start_recap(ctx, channel : discord.TextChannel = None):
+        if channel == None and "recap" not in channels.keys():
+            await ctx.respond("Please indicate a channel")
+        elif schedule_flag:
+            await ctx.respond("Recap is already activated")
+        else:
+            scheduler.start()
+            if channel == None:
+                await ctx.respond("The recap will be sent to the channel " + bot.get_channel(channels["recap"]).name)
+            else:
+                channels["recap"] = channel.id
+                save_data(discord_data=channels)
+                await ctx.respond("The recap will be sent to the channel : " + channel.name)
+        
+            
     @bot.command(description="Sends the bot's latency.") 
     async def ping(ctx): 
         await ctx.respond(f"Pong! Latency is : {bot.latency} ms")
+    
+    @bot.command(description="Stop searching new matchs for all players")
+    async def stop_bot(ctx):
+        if look_for_last_match.is_running():
+            look_for_last_match.stop()
+            await ctx.respond("Bot stopped succefully")
+        else:
+            await ctx.respond("The bot is already stopped")
+    
+    @bot.command(description="Start searching new match (running by default)")
+    async def start_bot(ctx):
+        if look_for_last_match.is_running():
+            await ctx.respond("The bot is already running")
+        else:
+            look_for_last_match.start()
+            await ctx.respond("The bot is starting")
     
     # Append a player in the dictionnary to watch him
     @bot.command()
