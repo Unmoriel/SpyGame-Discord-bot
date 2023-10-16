@@ -176,9 +176,10 @@ def update_rank(old_rank : dict, queue : dict, win : bool, queueType : str):
                 text_LP += f"Promote : {old_rank[queueType]['tier']} {old_rank[queueType]['rank']} -> {queue['tier']} {queue['rank']}"
             else:
                 text_LP += f"Demote : {old_rank[queueType]['tier']} {old_rank[queueType]['rank']} -> {queue['tier']} {queue['rank']}"
-                old_rank[queueType]['rank'] = queue['rank']
-                old_rank[queueType]['tier'] = queue['tier']
-                old_rank[queueType]['LP'] = queue['leaguePoints']
+            
+            old_rank[queueType]['rank'] = queue['rank']
+            old_rank[queueType]['tier'] = queue['tier']
+            old_rank[queueType]['LP'] = queue['leaguePoints']
                                                 
         else:
             if win:
