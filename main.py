@@ -14,9 +14,6 @@ import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
-#todo :
-# - Gerer le cas des Remake 
-# - Ajouter le recap de la semaine
 
 chemin = path.abspath(path.split(__file__)[0])  #Récuperation du chemin ou est le fichier
 cheminDATA = chemin + "/data/" #Chemin faire le fichier data 
@@ -121,6 +118,8 @@ def gameType(queueId):
         type_partie += "a Flex"
     elif queueId == 31 or queueId == 32 or queueId == 33:
         type_partie += "a Coop vs IA"
+    elif queueId == 700:
+        type_partie += "a Clash"
     else:
         type_partie += f" __inconnue__ ({str(queueId)})"
     
@@ -179,6 +178,7 @@ def update_rank(old_rank : dict, queue : dict, win : bool, queueType : str):
                 text_LP += f"Demote : {old_rank[queueType]['tier']} {old_rank[queueType]['rank']} -> {queue['tier']} {queue['rank']}"
                 old_rank[queueType]['rank'] = queue['rank']
                 old_rank[queueType]['tier'] = queue['tier']
+                old_rank[queueType]['LP'] = queue['leaguePoints']
                                                 
         else:
             if win:
@@ -280,14 +280,22 @@ def main():
         for pseudo in puuidDict:
             totalGameWeek = puuidDict[pseudo]['win_week'] + puuidDict[pseudo]['loose_week']
             winRateWeek = round(puuidDict[pseudo]['win_week'] / totalGameWeek * 100)
-        
+            value_field = ""
+            if puuidDict[pseudo]['win_week'] == 0 and puuidDict[pseudo]['loose_week'] == 0:
+                value_field = "No game this week"
+            else:
+                value_field = f"{puuidDict[pseudo]['win_week']} win {puuidDict[pseudo]['loose_week']} loose - {winRateWeek}% winrate"
+                
             embed.add_field(
                 name= pseudo,
-                value= f"{puuidDict[pseudo]['win_week']} win {puuidDict[pseudo]['loose_week']} loose - {winRateWeek}% winrate",
+                value= value_field,
                 inline=True
             )
             
         await bot.get_channel(channels['recap']).send(embed=embed)
+        puuidDict[pseudo]['win_week'] = 0
+        puuidDict[pseudo]['loose_week'] = 0
+        save_data(puuidDict)
 
     schedule_flag = False #Allow to know if the scheduler is already running
     scheduler = AsyncIOScheduler()
@@ -308,6 +316,7 @@ def main():
         elif schedule_flag:
             await ctx.respond("Recap is already activated")
         else:
+            schedule_flag = True
             scheduler.start()
             if channel == None:
                 await ctx.respond("The recap will be sent to the channel " + bot.get_channel(channels["recap"]).name)
@@ -315,7 +324,15 @@ def main():
                 channels["recap"] = channel.id
                 save_data(discord_data=channels)
                 await ctx.respond("The recap will be sent to the channel : " + channel.name)
-        
+    
+    @bot.command(name="stop_recap")
+    async def stop_recap(ctx):
+        if schedule_flag:
+            schedule_flag = False
+            scheduler.shutdown()
+            await ctx.respond("Recap stopped")
+        else:
+            await ctx.respond("Recap is already stopped")
             
     @bot.command(description="Sends the bot's latency.") 
     async def ping(ctx): 
@@ -428,6 +445,7 @@ def main():
                             queueId = response2.json()["info"]["queueId"] #const wich define the type of game
                             type_partie = gameType(queueId)
                             win = False
+                            remake = response2.json()["info"]["gameDuration"] < 301 #if the game is less than 5 minutes, it's a remake
                             
                             print("Recherche du pseudo dans la game...")
                             for participant in response2.json()["info"]["participants"]:
@@ -452,9 +470,17 @@ def main():
                                     
                                         
                                     print("Création du message...")
+                                    titre = ""
+                                    color = discord.Color.green() if win else discord.Color.red()
+                                    if remake:
+                                        titre = "Remake " + type_partie
+                                        color = discord.Color.white()
+                                    else:
+                                        titre = participant["summonerName"] + " " + ("won" if win else "lost") + " " + type_partie
+                                    
                                     embed = discord.Embed(
-                                            title=participant["summonerName"] + " " + ("won" if win else "lost") + " " + type_partie,
-                                            color=discord.Color.green() if participant["win"] else discord.Color.red()
+                                            title=titre,
+                                            color=color
                                     )
                                     embed.add_field(
                                         name= participant["championName"] + " - " + str(participant["kills"]) + "/" + str(participant["deaths"]) + "/" + str(participant["assists"]),
