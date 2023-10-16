@@ -258,8 +258,8 @@ def main():
     #On remet à jour les données si il y a eu une MAJ de la structure
     if new_MAJ():
         puuidDict, channels = load_data()
-        
     
+        
 
     flag = False #Permet de savoir si une fonction est entrain de parcourir le dictionnaire
     
@@ -307,10 +307,10 @@ def main():
         minute=00,
         timezone="Europe/Paris"
     )
-            
     
     @bot.command(name="start_recap")
     async def start_recap(ctx, channel : discord.TextChannel = None):
+        nonlocal schedule_flag
         if channel == None and "recap" not in channels.keys():
             await ctx.respond("Please indicate a channel")
         elif schedule_flag:
