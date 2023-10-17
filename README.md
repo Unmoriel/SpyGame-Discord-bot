@@ -1,3 +1,6 @@
+<h1>Images</h1>
+<img src="./others/exemple_img1.png">
+<img src="./others/exemple_img2.png">
 <h1> SpyGame-Discord-bot - EN</h1>
 <h4>Summary:</h4>
 <p>
