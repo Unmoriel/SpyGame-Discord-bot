@@ -475,7 +475,7 @@ def main():
                                     color = discord.Color.green() if win else discord.Color.red()
                                     if remake:
                                         titre = participant["summonerName"] + "Remake " + type_partie
-                                        color = discord.Color.white()
+                                        color = discord.Color.blue()
                                     else:
                                         titre = participant["summonerName"] + " " + ("won" if win else "lost") + " " + type_partie
                                     
