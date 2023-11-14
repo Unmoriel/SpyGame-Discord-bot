@@ -279,12 +279,12 @@ def main():
             color=discord.Color.blue()
             )
         for pseudo in puuidDict:
-            totalGameWeek = puuidDict[pseudo]['win_week'] + puuidDict[pseudo]['loose_week']
-            winRateWeek = round(puuidDict[pseudo]['win_week'] / totalGameWeek * 100)
+            totalGameWeek = puuidDict[pseudo]['win_week'] + puuidDict[pseudo]['loose_week']  
             value_field = ""
-            if puuidDict[pseudo]['win_week'] == 0 and puuidDict[pseudo]['loose_week'] == 0:
+            if totalGameWeek == 0:
                 value_field = "No game this week"
             else:
+                winRateWeek = round(puuidDict[pseudo]['win_week'] / totalGameWeek * 100)
                 value_field = f"{puuidDict[pseudo]['win_week']} win {puuidDict[pseudo]['loose_week']} loose - {winRateWeek}% winrate"
                 
             embed.add_field(
