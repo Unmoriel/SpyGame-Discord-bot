@@ -308,7 +308,10 @@ def main():
         minute=00,
         timezone="Europe/Paris"
     )
-    
+    @bot.command(name="recap", description="Send a recap of the week (and reset all the stats of the week)")
+    async def recap(ctx):
+        await week_recap()
+            
     @bot.command(name="start_recap")
     async def start_recap(ctx, channel : discord.TextChannel = None):
         nonlocal schedule_flag
