@@ -292,11 +292,12 @@ def main():
                 value= value_field,
                 inline=True
             )
+            puuidDict[pseudo]['win_week'] = 0
+            puuidDict[pseudo]['loose_week'] = 0
             
-        await bot.get_channel(channels['recap']).send(embed=embed)
-        puuidDict[pseudo]['win_week'] = 0
-        puuidDict[pseudo]['loose_week'] = 0
         save_data(puuidDict)
+        await bot.get_channel(channels['recap']).send(embed=embed)
+
 
     schedule_flag = False #Allow to know if the scheduler is already running
     scheduler = AsyncIOScheduler()
