@@ -120,6 +120,8 @@ def gameType(queueId):
         type_partie += "a Coop vs IA"
     elif queueId == 700:
         type_partie += "a Clash"
+    elif queueId == 1700:
+        type_partie += "a Arena"
     else:
         type_partie += f" __inconnue__ ({str(queueId)})"
     
