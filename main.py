@@ -149,9 +149,10 @@ def crea_dict_player(rank : list, info : dict, last_match : str, channel_id):
             }
     
     for queue in rank:
-        profil[queue["queueType"]]["LP"] = queue["leaguePoints"]
-        profil[queue["queueType"]]["rank"] = queue["rank"]
-        profil[queue["queueType"]]["tier"] = queue["tier"]
+        if(queue["queueType"] in profil.keys()):
+            profil[queue["queueType"]]["LP"] = queue["leaguePoints"]
+            profil[queue["queueType"]]["rank"] = queue["rank"]
+            profil[queue["queueType"]]["tier"] = queue["tier"]
             
  
     return profil
