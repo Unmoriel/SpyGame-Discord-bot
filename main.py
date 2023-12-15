@@ -516,18 +516,16 @@ def main():
                                     print("Verification de la game...")
                                     text_LP = ""
                                     text_Arena = ""
-                                    if (
-                                            queueId == 420 or queueId == 440) and response_newRank.json() != []:  # if it's a Solo/Duo or a flex
+                                    if (queueId == 420 or queueId == 440) and response_newRank.json() != []:  # if it's a Solo/Duo or a flex
                                         queueType = "RANKED_SOLO_5x5" if queueId == 420 else "RANKED_FLEX_SR"
 
                                         for queue in response_newRank.json():
                                             if queue["queueType"] == queueType:
                                                 puuidDict[pseudo], text_LP = update_rank(puuidDict[pseudo], queue, win,
                                                                                          queueType)
-if not remake:
+                                        if not remake:
                                             st.nouvelle_game(data_stats)
-                                            
-                                    if not remake:
+
                                     if win:
                                         puuidDict[pseudo]['win_total'] += 1
                                         puuidDict[pseudo]['win_week'] += 1
