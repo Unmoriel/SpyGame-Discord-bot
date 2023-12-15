@@ -12,6 +12,7 @@ import json
 import datetime
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import stats as st
 
 chemin = path.abspath(path.split(__file__)[0])  # Récuperation du chemin ou est le fichier
 cheminDATA = chemin + "/data/"  # Chemin faire le fichier data
@@ -168,7 +169,7 @@ def crea_dict_player(rank: list, info: dict, last_match: str, channel_id):
               }
 
     for queue in rank:
-        if (queue["queueType"] in profil.keys()):
+        if queue["queueType"] in profil.keys():
             profil[queue["queueType"]]["LP"] = queue["leaguePoints"]
             profil[queue["queueType"]]["rank"] = queue["rank"]
             profil[queue["queueType"]]["tier"] = queue["tier"]
@@ -281,6 +282,8 @@ def main():
     if new_MAJ():
         puuidDict, channels = load_data()
 
+    data_stats = st.load_stat()# Dictionnaire des pour les stats
+
     flag = False  # Permet de savoir si une fonction est entrain de parcourir le dictionnaire
 
     # When the discord bot is ready
@@ -327,6 +330,25 @@ def main():
         timezone="Europe/Paris"
     )
 
+    async def reset_game():
+        data_stats["nb_game_moyen_jours"] = data_stats["nb_game_jours"] + data_stats["nb_game_moyen_jours"] / data_stats["nb_jours"]
+        data_stats["nb_game_jours"] = 0
+        data_stats["nb_jours"] += 1
+        st.save_stat(data_stats)
+        print("Reset des stats de la journée")
+
+    schedulerStats = AsyncIOScheduler()
+    schedulerStats.add_job(
+        reset_game,
+        trigger="cron",
+        day_of_week="*",
+        hour=0,
+        minute=28,
+        timezone="Europe/Paris"
+        )
+    schedulerStats.start()
+
+
     @bot.command(name="recap", description="Send a recap of the week (and reset all the stats of the week)")
     async def recap(ctx):
         await week_recap()
@@ -334,7 +356,7 @@ def main():
     @bot.command(name="start_recap")
     async def start_recap(ctx, channel: discord.TextChannel = None):
         nonlocal schedule_flag
-        if channel == None and "recap" not in channels.keys():
+        if channel is None and "recap" not in channels.keys():
             await ctx.respond("Please indicate a channel")
         elif schedule_flag:
             await ctx.respond("Recap is already activated")
@@ -415,6 +437,7 @@ def main():
             else:
                 print("Flag detected - sleep 0.5s")
                 await asyncio.sleep(0.5)
+
 
 
     '''
@@ -501,7 +524,10 @@ def main():
                                             if queue["queueType"] == queueType:
                                                 puuidDict[pseudo], text_LP = update_rank(puuidDict[pseudo], queue, win,
                                                                                          queueType)
-
+if not remake:
+                                            st.nouvelle_game(data_stats)
+                                            
+                                    if not remake:
                                     if win:
                                         puuidDict[pseudo]['win_total'] += 1
                                         puuidDict[pseudo]['win_week'] += 1
@@ -520,7 +546,6 @@ def main():
                                         else:
                                             placement = str(placement) + "th"
                                         text_Arena = f"\n{placement} place"
-
                                     print("Création du message...")
                                     titre = ""
                                     color = discord.Color.green() if win else discord.Color.red()
@@ -547,7 +572,7 @@ def main():
                                     )
                                     embed.timestamp = datetime.datetime.now()
 
-                            print("Création de l'image des perso de la game")
+                            print("Création de l'image des persos de la game")
                             gameChampImage = crea_Image(response2.json()["info"]["participants"], type_partie)
                             print("Sauvegarde en local de l'image...")
                             imsave(chemin + "/others/assembled_image.png", gameChampImage)
