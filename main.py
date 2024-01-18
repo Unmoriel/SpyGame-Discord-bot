@@ -135,6 +135,8 @@ def gameType(queueId):
         type_partie += "an ARAM"
     elif queueId == 440:
         type_partie += "a Flex"
+    elif queueId == 490:
+        type_partie += " quick game"
     elif queueId == 31 or queueId == 32 or queueId == 33:
         type_partie += "a Coop vs IA"
     elif queueId == 700:
@@ -320,6 +322,11 @@ def main():
         await bot.get_channel(channels['recap']).send(embed=embed)
 
     schedule_flag = False  # Allow to know if the scheduler is already running
+    if channels["recap"] != None: # If the channel is set, the scheduler is activated
+        schedule_flag = True
+        scheduler.start()
+        print("Recap is activated")
+
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         week_recap,
