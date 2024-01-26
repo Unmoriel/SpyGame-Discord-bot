@@ -136,7 +136,7 @@ def gameType(queueId):
     elif queueId == 440:
         type_partie += "a Flex"
     elif queueId == 490:
-        type_partie += " quick game"
+        type_partie += "a quick game"
     elif queueId == 31 or queueId == 32 or queueId == 33:
         type_partie += "a Coop vs IA"
     elif queueId == 700:
