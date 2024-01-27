@@ -322,10 +322,6 @@ def main():
         await bot.get_channel(channels['recap']).send(embed=embed)
 
     schedule_flag = False  # Allow to know if the scheduler is already running
-    if channels["recap"] != None: # If the channel is set, the scheduler is activated
-        schedule_flag = True
-        scheduler.start()
-        print("Recap is activated")
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
@@ -336,6 +332,10 @@ def main():
         minute=00,
         timezone="Europe/Paris"
     )
+    if channels["recap"] != None: # If the channel is set, the scheduler is activated
+        schedule_flag = True
+        scheduler.start()
+        print("Recap is activated")
 
     async def reset_game():
         data_stats["nb_game_moyen_jours"] = data_stats["nb_game_jours"] + data_stats["nb_game_moyen_jours"] / data_stats["nb_jours"]
