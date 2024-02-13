@@ -1,7 +1,7 @@
 from src.modele.repository import connexionBaseDeDonnee
 
 
-async def add_player_watch(puuid: str, id_server: str):
+async def add_player_watch(puuid: str, id_server: int):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
@@ -13,7 +13,7 @@ async def add_player_watch(puuid: str, id_server: str):
     print(f"Player {puuid} added to the watch list")
 
 
-async def delete_player_watch(puuid: str, id_server: str):
+async def delete_player_watch(puuid: str, id_server: int):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
@@ -37,7 +37,7 @@ async def get_players_by_server(id_server: str) -> list:
     return result
 
 
-async def player_watch(puuid: str, id_server: str) -> bool:
+async def player_watch(puuid: str, id_server: int) -> bool:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(

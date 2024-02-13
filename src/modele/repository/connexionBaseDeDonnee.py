@@ -8,7 +8,7 @@ def connexion():
         Switch between the two following lines to use the conf.json file or the conf.py file
     '''
     # ids = conf.get_conf_file()
-    ids = conf.get_conf_code()
+    ids = conf.get_bdd_conf()
     try:
         conn = mariadb.connect(
             user=ids['user'],

@@ -1,7 +1,7 @@
 from src.modele.repository import connexionBaseDeDonnee
 
 
-def add_solo_rank(puuid: str, solo_rank: dict):
+async def add_solo_rank(puuid: str, solo_rank: dict):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     if not solo_rank:
@@ -16,7 +16,7 @@ def add_solo_rank(puuid: str, solo_rank: dict):
     print(f"Solo rank added for {puuid} to the database")
 
 
-def add_flex_rank(puuid: str, flex_rank: dict):
+async def add_flex_rank(puuid: str, flex_rank: dict):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     if not flex_rank:
@@ -31,7 +31,7 @@ def add_flex_rank(puuid: str, flex_rank: dict):
     print(f"Flex rank added {puuid} to the database")
 
 
-def update_solo_rank(puuid: str, solo_rank: dict):
+async def update_solo_rank(puuid: str, solo_rank: dict):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
@@ -44,7 +44,7 @@ def update_solo_rank(puuid: str, solo_rank: dict):
     print(f"Solo rank updated for {puuid} to the database")
 
 
-def update_flex_rank(puuid: str, flex_rank: dict):
+async def update_flex_rank(puuid: str, flex_rank: dict):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
@@ -55,3 +55,29 @@ def update_flex_rank(puuid: str, flex_rank: dict):
     cursor.close()
     conn.close()
     print(f"Flex rank updated for {puuid} to the database")
+
+
+async def get_solo_rank(puuid: str) -> dict:
+    conn = connexionBaseDeDonnee.connexion()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM SOLOQ WHERE puuid=?", (puuid,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    # Change the key name to match the other functions
+    result["rank"] = result["rang"]
+    del result["rang"]
+    return result
+
+
+async def get_flex_rank(puuid: str) -> dict:
+    conn = connexionBaseDeDonnee.connexion()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM FLEX WHERE puuid=?", (puuid,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    # Change the key name to match the other functions
+    result["rank"] = result["rang"]
+    del result["rang"]
+    return result

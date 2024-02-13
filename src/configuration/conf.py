@@ -8,22 +8,26 @@ conf_code = {}
 
 def get_conf() -> dict:
     """Get the configuration for the database from this file."""
-    return get_conf_file()
+    return get_conf_code()
 
 
 def get_riot_key() -> str:
     """Get the Riot API key from the configuration file."""
-    return get_conf_file()['riot']
+    return get_conf()['riot']
 
 
 def get_discord_key() -> str:
     """Get the Discord API key from the configuration file."""
-    return get_conf_file()['discord']
+    return get_conf()['discord']
 
 
 def get_cloudinary_key() -> str:
     """Get the Cloudinary API key from the configuration file."""
-    return get_conf_file()['cloudinary']
+    return get_conf()['cloudinary']
+
+
+def get_bdd_conf() -> dict:
+    return get_conf()['bdd']
 
 
 def get_conf_code() -> dict:

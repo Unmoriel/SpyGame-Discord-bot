@@ -32,6 +32,16 @@ async def get_last_match(puuid: str) -> str:
         return ""
 
 
+async def get_last_match_details(match_id: str) -> dict:
+    url = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id}?api_key={RIOT_API_KEY}"
+    requete = requests.get(url)
+    if requete.status_code == 200:
+        return requete.json()
+    else:
+        print(f"Last match details error : {requete.status_code} {requete.json()['status']['message']}")
+        return {}
+
+
 async def get_flex_rank(summonerId: str) -> dict:
     url = f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{summonerId}?api_key={RIOT_API_KEY}"
     requete = requests.get(url)
@@ -55,4 +65,13 @@ async def get_solo_rank(summonerId: str) -> dict:
         return {}
     else:
         print(f"solo rank error : {requete.status_code} {requete.json()['status']['message']}")
+        return {}
+
+
+async def get_rank(queue_id: int, summonerId: str) -> dict:
+    if queue_id == 440:
+        return await get_solo_rank(summonerId)
+    elif queue_id == 420:
+        return await get_flex_rank(summonerId)
+    else:
         return {}
