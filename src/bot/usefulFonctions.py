@@ -1,3 +1,5 @@
+import time
+
 import requests
 from numpy import concatenate
 from PIL import Image
@@ -46,14 +48,16 @@ def getChampionsId(key):
 async def crea_image(participants, type_partie):
     url_champions_data, url_champions_image = link_champions_data(), link_image_champion()
     champions_data = requests.get(url_champions_data).json()['data']
-
+    moyenne = 0
     image = Image.open(
-        requests.get(url_champions_image + champions_data[getChampionsId(participants[0]['championId'])]['image']['full'],
+        requests.get(url_champions_image + champions_data[participants[0]['championName']]['image']['full'],
                      stream=True).raw)
     for i in range(1, len(participants)):
+        t1 = time.time()
         req = requests.get(
-            url_champions_image + champions_data[getChampionsId(participants[i]['championId'])]['image']['full'],
+            url_champions_image + champions_data[participants[i]['championName']]['image']['full'],
             stream=True).raw
+        moyenne += time.time() - t1
         imagePlus = Image.open(req)
         image = concatenate((image, imagePlus), axis=1)
         if type_partie == "an Arena":
@@ -65,6 +69,8 @@ async def crea_image(participants, type_partie):
                 imageVersus = Image.open(CHEMINOTHERS + '/versus_white.jpg')
                 image = concatenate((image, imageVersus), axis=1)
 
+    moyenne /= len(participants)-1
+    print(f"Temps moyen pour récupérer une image : {moyenne} secondes")
     return image
 
 
