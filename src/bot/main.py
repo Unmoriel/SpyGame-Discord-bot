@@ -103,61 +103,65 @@ def main():
 
     @tasks.loop(seconds=30)
     async def check_last_match():
-        servers = await serverRepository.get_all_servers()
-        for server in servers:
-            players = await watchRepository.get_players_by_server(server['id_server'])
-            for player in players:
-                last_match = await request.get_last_match(player['puuid'])
-                if last_match != player['dernier_match']:
-                    print(f"{player['pseudo']} has a new match")
+        players = await playerRepository.get_all_players_watch()
+        for player in players:
+            last_match = await request.get_last_match(player['puuid'])
+            if last_match != player['dernier_match']:
+                print(f"{player['pseudo']} has a new match")
 
-                    match = await request.get_last_match_details(last_match)
-                    if match:
-                        for participant in match['info']['participants']:
-                            if participant['puuid'] == player['puuid']:
-                                titre = f"{player['pseudo']}"
-                                titre += " won " if participant['win'] else " lost "
-                                titre += util.game_type(match['info']['queueId'])
+                match = await request.get_last_match_details(last_match)
+                if match:
+                    for participant in match['info']['participants']:
+                        if participant['puuid'] == player['puuid']:
+                            titre = f"{player['pseudo']}"
+                            titre += " won " if participant['win'] else " lost "
+                            titre += util.game_type(match['info']['queueId'])
 
-                                text_lp = ""
-                                text_Arena = ""
+                            text_lp = ""
+                            text_Arena = ""
 
-                                new_rank = await request.get_rank(match['info']['queueId'], player['sumonerId'])
-                                if new_rank:
-                                    if match['info']['queueId'] == "RANKED_FLEX_SR":
-                                        old_rank = await rankRepository.get_flex_rank(player['puuid'])
-                                        await rankRepository.update_flex_rank(player['puuid'], new_rank)
-                                    else:
-                                        old_rank = await rankRepository.get_solo_rank(player['puuid'])
-                                        await rankRepository.update_solo_rank(player['puuid'], new_rank)
+                            new_rank = await request.get_rank(match['info']['queueId'], player['sumonerId'])
+                            if new_rank:
+                                if match['info']['queueId'] == "RANKED_FLEX_SR":
+                                    old_rank = await rankRepository.get_flex_rank(player['puuid'])
+                                    await rankRepository.update_flex_rank(player['puuid'], new_rank)
+                                else:
+                                    old_rank = await rankRepository.get_solo_rank(player['puuid'])
+                                    await rankRepository.update_solo_rank(player['puuid'], new_rank)
 
-                                    text_lp = util.str_rank(old_rank, new_rank, participant['win'])
+                                text_lp = util.str_rank(old_rank, new_rank, participant['win'])
 
-                                t1 = time.time()
-                                image = await util.crea_image(match["info"]["participants"], util.game_type(match['info']['queueId']))
-                                print(f"Image créée en {int(time.time() - t1)} secondes")
+                            t1 = time.time()
+                            image = await util.crea_image(match["info"]["participants"],
+                                                          util.game_type(match['info']['queueId']))
+                            print(f"Image créée en {int(time.time() - t1)} secondes")
 
-                                # I don't want hour in my text if the game is less than 1 hour
-                                duree_game = ("\nDuree : " +
-                                              (time.strftime('%M:%S', time.gmtime(match['info']['gameDuration']))
-                                               if match['info']['gameDuration'] <= 3600
-                                               else time.strftime('%H:%M:%S', time.gmtime(participant['gameDuration']))))
+                            # I don't want hour in my text if the game is less than 1 hour
+                            duree_game = ("\nDuree : " +
+                                          (time.strftime('%M:%S', time.gmtime(match['info']['gameDuration']))
+                                           if match['info']['gameDuration'] <= 3600
+                                           else time.strftime('%H:%M:%S', time.gmtime(participant['gameDuration']))))
 
-                                embed = discord.Embed(
-                                    title=titre,
-                                    description="",
-                                    color=discord.Color.green() if participant['win'] else discord.Color.red()
-                                )
-                                embed.add_field(
-                                    name=participant["championName"] + " - " + str(participant["kills"]) + "/" +
-                                                str(participant["deaths"]) + "/" + str(participant["assists"]),
-                                    value=str(participant["goldEarned"]) + " golds" + text_lp + text_Arena + duree_game,
-                                    inline=True
-                                )
-                                embed.set_thumbnail(
-                                    url=util.link_image_champion() + participant['championName'] + ".png"
-                                )
-                                embed.set_image(url=await util.save_image_cloud(image))
+                            embed = discord.Embed(
+                                title=titre,
+                                description="",
+                                color=discord.Color.green() if participant['win'] else discord.Color.red()
+                            )
+                            embed.add_field(
+                                name=participant["championName"] + " - " + str(participant["kills"]) + "/" +
+                                     str(participant["deaths"]) + "/" + str(participant["assists"]),
+                                value=str(participant["goldEarned"]) + " golds" + text_lp + text_Arena + duree_game,
+                                inline=True
+                            )
+                            embed.set_thumbnail(
+                                url=util.link_image_champion() + participant['championName'] + ".png"
+                            )
+                            embed.set_image(url=await util.save_image_cloud(image))
+
+                            id_servers = await watchRepository.get_server_by_player(player['puuid'])
+
+                            for id_server in id_servers:
+                                server = await serverRepository.get_server(id_server['id_server'])
                                 if server['main_channel']:
                                     await (bot.get_guild(server['id_server']).get_channel(server['main_channel'])
                                            .send(embed=embed))
@@ -166,11 +170,13 @@ def main():
                                         "Use /set_main_channel to set a channel where the bot will send"
                                         " all the messages",
                                         embed=embed))
-                                await playerRepository.update_player_last_match(player['puuid'], last_match)
-                    else:
-                        print("Error : player not found in the game")
+
+                            await playerRepository.update_player_last_match(player['puuid'], last_match)
                 else:
-                    print(f"{player['pseudo']} has no new match")
+                    print("Error : player not found in the game")
+            else:
+                # print(f"{player['pseudo']} has no new match")
+                pass
 
     bot.run(discord_k)
 

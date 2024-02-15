@@ -1,6 +1,20 @@
-from . import connexionBaseDeDonnee
-from . import rankRepository
+from src.modele.repository import connexionBaseDeDonnee
+from src.modele.repository import rankRepository
 
+
+async def get_all_players_watch() -> list:
+    """
+    Get all the players in the watch list
+    """
+    conn = connexionBaseDeDonnee.connexion()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT DISTINCT * FROM JOUEURS"
+        " WHERE puuid IN (SELECT puuid FROM WATCH)")
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
 
 async def get_player_by_game_name_tag_line(game_name_tag_line: str) -> list:
     conn = connexionBaseDeDonnee.connexion()
@@ -78,3 +92,4 @@ async def update_player_last_match(puuid: str, last_match: str):
     cursor.close()
     conn.close()
     print(f"Player {puuid} last match updated in the database")
+

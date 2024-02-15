@@ -37,6 +37,18 @@ async def get_players_by_server(id_server: str) -> list:
     return result
 
 
+async def get_server_by_player(puuid: str) -> list:
+    conn = connexionBaseDeDonnee.connexion()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT id_server FROM WATCH WHERE puuid=?", (puuid,)
+    )
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
+
 async def player_watch(puuid: str, id_server: int) -> bool:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)

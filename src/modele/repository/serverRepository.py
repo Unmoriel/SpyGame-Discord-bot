@@ -43,14 +43,17 @@ async def update_server(id_server: str, recap_channel: int = None, main_channel:
     print(f"Server {id_server} updated in the database")
 
 
-async def get_server(id_server: str):
+async def get_server(id_server: int) -> dict:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM SERVERSDISCORD WHERE id_server=?", (id_server,))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
-    return result
+    if result:
+        return result[0]
+    else:
+        return {}
 
 
 async def get_all_servers():
@@ -61,3 +64,5 @@ async def get_all_servers():
     cursor.close()
     conn.close()
     return result
+
+
