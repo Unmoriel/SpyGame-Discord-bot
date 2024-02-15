@@ -138,10 +138,13 @@ def main():
 
                             # I don't want hour in my text if the game is less than 1 hour
                             duree_game = ("\nDuree : " +
-                                          (time.strftime('%M:%S', time.gmtime(match['info']['gameDuration']))
+                                          (time.strftime('%M:%S', time.gmtime(match['info']['gameDuration'])) + " min"
                                            if match['info']['gameDuration'] <= 3600
                                            else time.strftime('%H:%M:%S', time.gmtime(participant['gameDuration']))))
 
+                            text_gold_damage_cs = (f"{participant['goldEarned']} golds - "
+                                                   f"{participant['totalDamageDealtToChampions']} damages - "
+                                                   f"{participant['totalMinionsKilled'] + participant['neutralMinionsKilled']} cs")
                             embed = discord.Embed(
                                 title=titre,
                                 description="",
@@ -150,7 +153,7 @@ def main():
                             embed.add_field(
                                 name=participant["championName"] + " - " + str(participant["kills"]) + "/" +
                                      str(participant["deaths"]) + "/" + str(participant["assists"]),
-                                value=str(participant["goldEarned"]) + " golds" + text_lp + text_Arena + duree_game,
+                                value=text_gold_damage_cs + text_lp + text_Arena + duree_game,
                                 inline=True
                             )
                             embed.set_thumbnail(
