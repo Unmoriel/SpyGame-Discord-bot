@@ -122,7 +122,7 @@ def main():
 
                             new_rank = await request.get_rank(match['info']['queueId'], player['sumonerId'])
                             if new_rank:
-                                if match['info']['queueId'] == "RANKED_FLEX_SR":
+                                if match['info']['queueId'] == 440:
                                     old_rank = await rankRepository.get_flex_rank(player['puuid'])
                                     await rankRepository.update_flex_rank(player['puuid'], new_rank)
                                 else:
@@ -131,6 +131,7 @@ def main():
 
                                 text_lp = util.str_rank(old_rank, new_rank, participant['win'])
 
+                            print("Création de l'image...")
                             t1 = time.time()
                             image = await util.crea_image(match["info"]["participants"],
                                                           util.game_type(match['info']['queueId']))

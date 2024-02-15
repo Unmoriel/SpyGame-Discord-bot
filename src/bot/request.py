@@ -70,8 +70,8 @@ async def get_solo_rank(summonerId: str) -> dict:
 
 async def get_rank(queue_id: int, summonerId: str) -> dict:
     if queue_id == 440:
-        return await get_solo_rank(summonerId)
-    elif queue_id == 420:
         return await get_flex_rank(summonerId)
+    elif queue_id == 420:
+        return await get_solo_rank(summonerId)
     else:
         return {}

@@ -2,7 +2,7 @@
 
 CREATE TABLE JOUEURS(
    puuid VARCHAR(100),
-   gameName_tagLigne VARCHAR(50) NOT NULL,
+   gameName_tagLine VARCHAR(50) NOT NULL,
    sumonerId VARCHAR(100),
    pseudo VARCHAR(50),
    dernier_match VARCHAR(50),
