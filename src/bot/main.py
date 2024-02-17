@@ -51,9 +51,13 @@ def main():
         await ctx.respond(f"Main channel set to {channel.name}")
 
     @bot.slash_command(description="Add a player to the watch list")
-    async def add(ctx: discord.Interaction, game_name: str, tag_line: str):
+    async def add(ctx: discord.Interaction, player: str):
         await ctx.response.defer()
-        account_info = await request.get_account(game_name, tag_line)
+        if not ('#' in player):
+            await ctx.followup.send("Error : the player must be in the format 'game_name#tag_line'")
+            return
+
+        account_info = await request.get_account(player)
         if account_info:
 
             # Check if the player is already in the database
@@ -63,7 +67,7 @@ def main():
                 rank_flex = await request.get_flex_rank(account_info['id'])
                 await playerRepository.add_player(
                     puuid=account_info['puuid'],
-                    game_name_tag_line=game_name + "#" + tag_line,
+                    game_name_tag_line=player,
                     sumonerId=account_info['id'],
                     pseudo=account_info['name'],
                     dernier_match=last_match,
@@ -75,20 +79,20 @@ def main():
             else:
                 # Check if the player is already in the watch list of the server
                 if await watchRepository.player_watch(account_info['puuid'], ctx.guild.id):
-                    await ctx.followup.send(f"{game_name}#{tag_line} is already in the watch list")
+                    await ctx.followup.send(f"{player} is already in the watch list")
                     return
 
             await watchRepository.add_player_watch(account_info['puuid'], ctx.guild.id)
-            await ctx.followup.send(f"{game_name}#{tag_line} added to the watch list")
+            await ctx.followup.send(f"{player} added to the watch list")
         else:
             await ctx.followup.send("Error")
 
     @bot.slash_command(description="Remove a player from the watch list")
-    async def remove(ctx: discord.interactions, game_name: str, tag_line: str):
-        player = await playerRepository.get_player_by_game_name_tag_line(game_name + "#" + tag_line)
+    async def remove(ctx: discord.interactions, player: str):
+        player = await playerRepository.get_player_by_game_name_tag_line(player)
         if player:
             await watchRepository.delete_player_watch(player[0]['puuid'], ctx.guild.id)
-            await ctx.respond(f"{game_name}#{tag_line} removed from the watch list")
+            await ctx.respond(f"{player} removed from the watch list")
         else:
             await ctx.respond("Player not found")
 
@@ -106,7 +110,7 @@ def main():
         players = await playerRepository.get_all_players_watch()
         for player in players:
             last_match = await request.get_last_match(player['puuid'])
-            if last_match != player['dernier_match']:
+            if last_match != player['dernier_match'] and last_match != "":
                 print(f"{player['pseudo']} has a new match")
 
                 match = await request.get_last_match_details(last_match)
@@ -138,7 +142,7 @@ def main():
                             print(f"Image créée en {int(time.time() - t1)} secondes")
 
                             # I don't want hour in my text if the game is less than 1 hour
-                            duree_game = ("\nDuree : " +
+                            duree_game = ("\nDuration : " +
                                           (time.strftime('%M:%S', time.gmtime(match['info']['gameDuration'])) + " min"
                                            if match['info']['gameDuration'] <= 3600
                                            else time.strftime('%H:%M:%S', time.gmtime(participant['gameDuration']))))

@@ -4,7 +4,9 @@ from src.configuration import conf
 RIOT_API_KEY = conf.get_riot_key()
 
 
-async def get_account(game_name: str, tag_line: str) -> dict:
+async def get_account(player: str) -> dict:
+    game_name = player.split("#")[0]
+    tag_line = player.split("#")[1]
     url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}?api_key={RIOT_API_KEY}"
     requete = requests.get(url)
     if requete.status_code == 200:

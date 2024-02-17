@@ -16,6 +16,7 @@ async def get_all_players_watch() -> list:
     conn.close()
     return result
 
+
 async def get_player_by_game_name_tag_line(game_name_tag_line: str) -> list:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
