@@ -8,7 +8,7 @@ from src.modele.repository import playerRepository
 from src.modele.repository import watchRepository
 from src.modele.repository import rankRepository
 from src.bot import request
-from src.bot import usefulFonctions as util
+from src.bot import usefulFonctions as Utils
 
 
 def main():
@@ -50,8 +50,19 @@ def main():
         await serverRepository.update_server(ctx.guild.id, main_channel=channel.id)
         await ctx.respond(f"Main channel set to {channel.name}")
 
+    async def autocomplete_remove_add(ctx: discord.AutocompleteContext):
+        players = await playerRepository.get_all_players_watch()
+        return [player["gameName_tagLine"] for player in players]
+
     @bot.slash_command(description="Add a player to the watch list")
-    async def add(ctx: discord.Interaction, player: str):
+    async def add(
+            ctx: discord.Interaction,
+            player: discord.Option(
+                str,
+                "Format : example#1234",
+                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add),
+                )
+    ):
         await ctx.response.defer()
         if not ('#' in player):
             await ctx.followup.send("Error : the player must be in the format 'game_name#tag_line'")
@@ -88,8 +99,13 @@ def main():
             await ctx.followup.send("Error")
 
     @bot.slash_command(description="Remove a player from the watch list")
-    async def remove(ctx: discord.interactions, player: str):
-        player = await playerRepository.get_player_by_game_name_tag_line(player)
+    async def remove(
+            ctx: discord.interactions,
+            pseudo: discord.Option(
+                str,
+                "Format : example#1234",
+                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add))):
+        player = await playerRepository.get_player_by_game_name_tag_line(pseudo)
         if player:
             await watchRepository.delete_player_watch(player[0]['puuid'], ctx.guild.id)
             await ctx.respond(f"{player} removed from the watch list")
@@ -119,7 +135,7 @@ def main():
                         if participant['puuid'] == player['puuid']:
                             titre = f"{player['pseudo']}"
                             titre += " won " if participant['win'] else " lost "
-                            titre += util.game_type(match['info']['queueId'])
+                            titre += Utils.game_type(match['info']['queueId'])
 
                             text_lp = ""
                             text_Arena = ""
@@ -133,12 +149,12 @@ def main():
                                     old_rank = await rankRepository.get_solo_rank(player['puuid'])
                                     await rankRepository.update_solo_rank(player['puuid'], new_rank)
 
-                                text_lp = util.str_rank(old_rank, new_rank, participant['win'])
+                                text_lp = Utils.str_rank(old_rank, new_rank, participant['win'])
 
                             print("Création de l'image...")
                             t1 = time.time()
-                            image = await util.crea_image(match["info"]["participants"],
-                                                          util.game_type(match['info']['queueId']))
+                            image = await Utils.crea_image(match["info"]["participants"],
+                                                          Utils.game_type(match['info']['queueId']))
                             print(f"Image créée en {int(time.time() - t1)} secondes")
 
                             # I don't want hour in my text if the game is less than 1 hour
@@ -162,9 +178,9 @@ def main():
                                 inline=True
                             )
                             embed.set_thumbnail(
-                                url=util.link_image_champion() + participant['championName'] + ".png"
+                                url=Utils.link_image_champion() + participant['championName'] + ".png"
                             )
-                            embed.set_image(url=await util.save_image_cloud(image))
+                            embed.set_image(url=await Utils.save_image_cloud(image))
 
                             id_servers = await watchRepository.get_server_by_player(player['puuid'])
 

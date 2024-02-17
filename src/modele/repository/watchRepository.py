@@ -25,7 +25,7 @@ async def delete_player_watch(puuid: str, id_server: int):
     print(f"Player {puuid} deleted from the watch list")
 
 
-async def get_players_by_server(id_server: str) -> list:
+async def get_players_by_server(id_server: int) -> list:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
