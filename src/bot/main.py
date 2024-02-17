@@ -9,6 +9,7 @@ from src.modele.repository import watchRepository
 from src.modele.repository import rankRepository
 from src.bot import request
 from src.bot import usefulFonctions as Utils
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 def main():
@@ -44,6 +45,53 @@ def main():
     async def on_guild_join(guild):
         print(f"Bot joined {guild.name}")
         await serverRepository.add_server(guild.id)
+
+    async def send_weekly_recap(id_server):
+        players = await watchRepository.get_players_by_server(id_server)
+        if players:
+            less_than_one_player = True
+            embed = discord.Embed(
+                title="Weekly recap",
+                description="",
+                color=discord.Color.blue()
+            )
+            for player in players:
+                if player['win_week'] + player['loose_week'] > 0:
+                    less_than_one_player = False
+                    winrate = round(player['win_week'] / (player['win_week'] + player['loose_week']) * 100)
+                    embed.add_field(
+                        name=f"{player['pseudo']} - {player['gameName_tagLine']}",
+                        value=f"{player['win_week']} wins {player['loose_week']} looses - {winrate}% winrate",
+                        inline=True
+                    )
+            if not less_than_one_player:
+                server = await serverRepository.get_server(id_server)
+                await bot.get_guild(id_server).get_channel(server['recap_channel']).send(embed=embed)
+
+    async def send_all_weekly_recap():
+        servers = await serverRepository.get_all_servers()
+        for server in servers:
+            if server['recap_channel']:
+                await send_weekly_recap(server['id_server'])
+
+        for player in await playerRepository.get_all_players_watch():
+            await playerRepository.reset_player_week(player['puuid'])
+
+    # Send the weekly recap every sunday at 20:00
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        send_all_weekly_recap,
+        trigger="cron",
+        day_of_week="sun",
+        hour=20,
+        minute=00,
+        timezone="Europe/Paris"
+    )
+
+    @bot.slash_command(description="Set the channel where the bot will send the recap of the week")
+    async def set_recap_channel(ctx, channel: discord.TextChannel):
+        await serverRepository.update_server(ctx.guild.id, recap_channel=channel.id)
+        await ctx.respond(f"Recap channel set to {channel.name}")
 
     @bot.slash_command(description="Set the channel where the bot will send all the messages")
     async def set_main_channel(ctx, channel: discord.TextChannel):
@@ -107,6 +155,7 @@ def main():
                 autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add))):
         player = await playerRepository.get_player_by_game_name_tag_line(pseudo)
         if player:
+            await playerRepository.reset_player_week(player[0]['puuid'])
             await watchRepository.delete_player_watch(player[0]['puuid'], ctx.guild.id)
             await ctx.respond(f"{player} removed from the watch list")
         else:
@@ -196,6 +245,7 @@ def main():
                                         embed=embed))
 
                             await playerRepository.update_player_last_match(player['puuid'], last_match)
+                            await playerRepository.increment_player_week(player['puuid'], participant['win'])
                 else:
                     print("Error : player not found in the game")
             else:

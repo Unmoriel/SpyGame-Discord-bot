@@ -94,3 +94,26 @@ async def update_player_last_match(puuid: str, last_match: str):
     conn.close()
     print(f"Player {puuid} last match updated in the database")
 
+
+async def increment_player_week(puuid: str, win: bool):
+    conn = connexionBaseDeDonnee.connexion()
+    cursor = conn.cursor()
+    temp = "win_week = win_week + 1" if win else "loose_week = loose_week + 1"
+    cursor.execute(
+        f"UPDATE JOUEURS SET {temp} WHERE puuid=?", (puuid,)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+async def reset_player_week(puuid: str):
+    conn = connexionBaseDeDonnee.connexion()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE JOUEURS SET win_week=0, loose_week=0 WHERE puuid=?", (puuid,)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print(f"Player {puuid} week reset in the database")
