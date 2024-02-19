@@ -9,7 +9,7 @@ CREATE TABLE JOUEURS(
    loose_week INT,
    win_week INT,
    PRIMARY KEY(puuid),
-   UNIQUE(gameName_tagLigne)
+   UNIQUE(gameName_tagLine)
 );
 
 
@@ -34,6 +34,7 @@ CREATE TABLE FLEX(
 
 CREATE TABLE SERVERSDISCORD(
    id_server BIGINT,
+   name VARCHAR(100),
    recap_channel BIGINT,
    main_channel BIGINT,
    PRIMARY KEY(id_server)

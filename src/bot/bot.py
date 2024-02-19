@@ -1,5 +1,4 @@
 import time
-
 import discord  # Pycord
 from discord.ext import tasks
 from src.configuration import conf
@@ -26,7 +25,8 @@ def main():
         # Add the servers that are not in the database
         for guild in guilds:
             if guild.id not in id_servers:
-                await serverRepository.add_server(guild.id)
+                await serverRepository.add_server(guild.id, guild.name)
+                await send_welcom_message(guild)
 
         # Delete the servers that are not in the guild's bot anymore
         for id_local_guild in id_servers:
@@ -42,9 +42,18 @@ def main():
         await serverRepository.delete_server(guild.id)
 
     @bot.event
-    async def on_guild_join(guild):
+    async def on_guild_join(guild: discord.Guild):
         print(f"Bot joined {guild.name}")
-        await serverRepository.add_server(guild.id)
+        await serverRepository.add_server(guild.id, guild.name)
+        await send_welcom_message(guild)
+
+    async def send_welcom_message(guild):
+        await guild.text_channels[0].send(
+            "Hi, \n"
+            "* Use /set_main_channel to set a channel where the bot will send all the messages\n"
+            "* Use /set_recap_channel to set a channel where the bot will send the recap of the week\n"
+            "* Use /add to add a player to the watch list\n"
+            "* Use /remove to remove a player from the watch list\n")
 
     async def send_weekly_recap(id_server):
         players = await watchRepository.get_players_by_server(id_server)
@@ -255,4 +264,3 @@ def main():
     bot.run(discord_k)
 
 
-main()

@@ -1,13 +1,13 @@
 from src.modele.repository import connexionBaseDeDonnee
 
 
-async def add_server(id_server: int):
+async def add_server(id_server: int, name: str):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
 
     cursor.execute(
-        "INSERT INTO SERVERSDISCORD (id_server, recap_channel, main_channel) VALUES (?, ?, ?)",
-        (id_server, None, None)
+        "INSERT INTO SERVERSDISCORD (id_server, name, recap_channel, main_channel) VALUES (?, ?, ?, ?)",
+        (id_server, name, None, None)
     )
     conn.commit()
     cursor.close()
