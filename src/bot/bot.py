@@ -50,11 +50,11 @@ def main():
     async def send_welcom_message(guild):
         await guild.text_channels[0].send(
             "Hi, \n"
-            "* Use __/set_main_channel__ to set a channel where the bot will send all the messages\n"
-            "* Use __/set_recap_channel__ to set a channel where the bot will send the recap of the week\n"
-            "* Use __/add__ to add a player to the watch list\n"
-            "* Use __/remove__ to remove a player from the watch list\n"
-            "* Use __/watch_list__ to show the watch list")
+            "* Use **/set_main_channel** to set a channel where the bot will send all the messages\n"
+            "* Use **/set_recap_channel** to set a channel where the bot will send the recap of the week\n"
+            "* Use **/add** to add a player to the watch list\n"
+            "* Use **/remove** to remove a player from the watch list\n"
+            "* Use **/watch_list** to show the watch list")
 
     async def send_weekly_recap(id_server):
         players = await watchRepository.get_players_by_server(id_server)
