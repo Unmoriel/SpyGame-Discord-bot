@@ -20,7 +20,7 @@ async def get_all_players_watch() -> list:
 async def get_player_by_game_name_tag_line(game_name_tag_line: str) -> list:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM JOUEURS WHERE gameName_tagLine=?", (game_name_tag_line,))
+    cursor.execute("SELECT * FROM JOUEURS WHERE gameName_tagLine=%s", (game_name_tag_line,))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -30,7 +30,7 @@ async def get_player_by_game_name_tag_line(game_name_tag_line: str) -> list:
 async def get_player_by_puuid(puuid_player: str) -> list:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM JOUEURS WHERE puuid=?", (puuid_player,))
+    cursor.execute("SELECT * FROM JOUEURS WHERE puuid=%s", (puuid_player,))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -41,7 +41,7 @@ async def get_players_by_server(id_server: str) -> list:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
-        "SELECT * FROM JOUEUR j JOIN WATCH w ON w.puuid = j.puuid WHERE id_server=?", (id_server,)
+        "SELECT * FROM JOUEUR j JOIN WATCH w ON w.puuid = j.puuid WHERE id_server=%s", (id_server,)
     )
     result = cursor.fetchall()
     cursor.close()
@@ -70,7 +70,7 @@ async def add_player(puuid: str,
             dernier_match,
             loose_week,
             win_week) 
-            VALUES(?, ?, ?, ?, ?, ?, ?)
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
         """,
         (puuid, game_name_tag_line, sumonerId, pseudo, dernier_match, loose_week, win_week)
     )
@@ -87,7 +87,7 @@ async def update_player_last_match(puuid: str, last_match: str):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
-        "UPDATE JOUEURS SET dernier_match=? WHERE puuid=?", (last_match, puuid)
+        "UPDATE JOUEURS SET dernier_match=%s WHERE puuid=%s", (last_match, puuid)
     )
     conn.commit()
     cursor.close()
@@ -100,7 +100,7 @@ async def increment_player_week(puuid: str, win: bool):
     cursor = conn.cursor()
     temp = "win_week = win_week + 1" if win else "loose_week = loose_week + 1"
     cursor.execute(
-        f"UPDATE JOUEURS SET {temp} WHERE puuid=?", (puuid,)
+        f"UPDATE JOUEURS SET {temp} WHERE puuid=%s", (puuid,)
     )
     conn.commit()
     cursor.close()
@@ -111,7 +111,7 @@ async def reset_player_week(puuid: str):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
-        "UPDATE JOUEURS SET win_week=0, loose_week=0 WHERE puuid=?", (puuid,)
+        "UPDATE JOUEURS SET win_week=0, loose_week=0 WHERE puuid=%s", (puuid,)
     )
     conn.commit()
     cursor.close()

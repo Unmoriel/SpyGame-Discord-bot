@@ -1,7 +1,7 @@
 import requests
-from src.configuration import conf
+from src.configuration import config
 
-RIOT_API_KEY = conf.get_riot_key()
+RIOT_API_KEY = config.get_riot_key()
 
 
 async def get_account(player: str) -> dict:

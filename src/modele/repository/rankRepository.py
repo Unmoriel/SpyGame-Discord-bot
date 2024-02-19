@@ -7,7 +7,7 @@ async def add_solo_rank(puuid: str, solo_rank: dict):
     if not solo_rank:
         solo_rank = {"tier": None, "rank": None, "LP": None }
     cursor.execute(
-        "INSERT INTO SOLOQ (puuid, LP, rang, tier) VALUES (?, ?, ?, ?)",
+        "INSERT INTO SOLOQ (puuid, LP, rang, tier) VALUES (%s, %s, %s, %s)",
         (puuid, solo_rank['LP'], solo_rank['rank'], solo_rank['tier'])
     )
     conn.commit()
@@ -22,7 +22,7 @@ async def add_flex_rank(puuid: str, flex_rank: dict):
     if not flex_rank:
         flex_rank = {"tier": None, "rank": None, "LP": None }
     cursor.execute(
-        "INSERT INTO FLEX (puuid, LP, rang, tier) VALUES (?, ?, ?, ?)",
+        "INSERT INTO FLEX (puuid, LP, rang, tier) VALUES (%s, %s, %s, %s)",
         (puuid, flex_rank['LP'], flex_rank['rank'], flex_rank['tier'])
     )
     conn.commit()
@@ -35,7 +35,7 @@ async def update_solo_rank(puuid: str, solo_rank: dict):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
-        "UPDATE SOLOQ SET LP=?, rang=?, tier=? WHERE puuid=?",
+        "UPDATE SOLOQ SET LP=%s, rang=%s, tier=%s WHERE puuid=%s",
         (solo_rank['LP'], solo_rank['rank'], solo_rank['tier'], puuid)
     )
     conn.commit()
@@ -48,7 +48,7 @@ async def update_flex_rank(puuid: str, flex_rank: dict):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
-        "UPDATE FLEX SET LP=?, rang=?, tier=? WHERE puuid=?",
+        "UPDATE FLEX SET LP=%s, rang=%s, tier=%s WHERE puuid=%s",
         (flex_rank['LP'], flex_rank['rank'], flex_rank['tier'], puuid)
     )
     conn.commit()
@@ -60,7 +60,7 @@ async def update_flex_rank(puuid: str, flex_rank: dict):
 async def get_solo_rank(puuid: str) -> dict:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM SOLOQ WHERE puuid=?", (puuid,))
+    cursor.execute("SELECT * FROM SOLOQ WHERE puuid=%s", (puuid,))
     result = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -73,7 +73,7 @@ async def get_solo_rank(puuid: str) -> dict:
 async def get_flex_rank(puuid: str) -> dict:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM FLEX WHERE puuid=?", (puuid,))
+    cursor.execute("SELECT * FROM FLEX WHERE puuid=%s", (puuid,))
     result = cursor.fetchone()
     cursor.close()
     conn.close()

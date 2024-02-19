@@ -4,12 +4,10 @@ import requests
 from numpy import concatenate
 from PIL import Image
 from matplotlib.image import imsave
-from src.configuration import conf
+from src.configuration import config
 import cloudinary.uploader
 import cloudinary.api
 from src import CHEMIN, CHEMINDATA, CHEMINOTHERS
-
-
 
 PATCH_DEFAULT = "14.3.1"  # Patch par défaut
 
@@ -73,9 +71,9 @@ async def crea_image(participants, type_partie):
 
 async def save_image_cloud(image):
     cloudinary.config(
-        cloud_name=conf.get_cloudinary_key()['cloud_name'],
-        api_key=conf.get_cloudinary_key()['api_key'],
-        api_secret=conf.get_cloudinary_key()['api_secret'],
+        cloud_name=config.get_cloudinary_key()['cloud_name'],
+        api_key=config.get_cloudinary_key()['api_key'],
+        api_secret=config.get_cloudinary_key()['api_secret'],
         secure=True
     )
     imsave(CHEMINOTHERS+"/assembled_image.png", image)

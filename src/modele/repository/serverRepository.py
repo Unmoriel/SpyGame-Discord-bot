@@ -6,7 +6,7 @@ async def add_server(id_server: int, name: str):
     cursor = conn.cursor()
 
     cursor.execute(
-        "INSERT INTO SERVERSDISCORD (id_server, name, recap_channel, main_channel) VALUES (?, ?, ?, ?)",
+        "INSERT INTO SERVERSDISCORD (id_server, name, recap_channel, main_channel) VALUES (%s, %s, %s, %s)",
         (id_server, name, None, None)
     )
     conn.commit()
@@ -20,7 +20,7 @@ async def delete_server(id_server: int):
     cursor = conn.cursor()
 
     cursor.execute(
-        "DELETE FROM SERVERSDISCORD WHERE id_server=?",
+        "DELETE FROM SERVERSDISCORD WHERE id_server=%s",
         (id_server,)
     )
     conn.commit()
@@ -34,7 +34,7 @@ async def update_server(id_server: str, recap_channel: int = None, main_channel:
     cursor = conn.cursor()
 
     cursor.execute(
-        "UPDATE SERVERSDISCORD SET recap_channel=?, main_channel=? WHERE id_server=?",
+        "UPDATE SERVERSDISCORD SET recap_channel=%s, main_channel=%s WHERE id_server=%s",
         (recap_channel, main_channel, id_server)
     )
     conn.commit()
@@ -46,7 +46,7 @@ async def update_server(id_server: str, recap_channel: int = None, main_channel:
 async def get_server(id_server: int) -> dict:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM SERVERSDISCORD WHERE id_server=?", (id_server,))
+    cursor.execute("SELECT * FROM SERVERSDISCORD WHERE id_server=%s", (id_server,))
     result = cursor.fetchall()
     cursor.close()
     conn.close()

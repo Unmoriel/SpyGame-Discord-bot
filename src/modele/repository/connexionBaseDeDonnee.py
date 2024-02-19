@@ -1,24 +1,23 @@
-import mariadb
-from src.configuration import conf
+import mysql.connector
+from src.configuration import config
 
 
 def connexion():
     '''
         Fonction qui permet de se connecter à la base de donnée
-        Switch between the two following lines to use the conf.json file or the conf.py file
+        Switch between the two following lines to use the conf.json file or the config.py file
     '''
-    # ids = conf.get_conf_file()
-    ids = conf.get_bdd_conf()
+    ids = config.get_bdd_conf()
     try:
-        conn = mariadb.connect(
+        conn = mysql.connector.connect(
             user=ids['user'],
             password=ids['password'],
             host=ids['host'],
             database=ids['database']
         )
         return conn
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
+    except mysql.connector.Error as e:
+        print(f"Error connecting to MariaDB/MYSQL Platform: {e}")
         exit(e)
 
 

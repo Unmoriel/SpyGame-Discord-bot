@@ -1,7 +1,7 @@
 import time
 import discord  # Pycord
 from discord.ext import tasks
-from src.configuration import conf
+from src.configuration import config
 from src.modele.repository import serverRepository
 from src.modele.repository import playerRepository
 from src.modele.repository import watchRepository
@@ -12,7 +12,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 def main():
-    discord_k = conf.get_discord_key()
+    discord_k = config.get_discord_key()
 
     bot = discord.Bot()
 
