@@ -197,7 +197,7 @@ def main():
                             titre += Utils.game_type(match['info']['queueId'])
 
                             text_lp = ""
-                            text_Arena = ""
+                            text_arena = ""
 
                             new_rank = await request.get_rank(match['info']['queueId'], player['sumonerId'])
                             if new_rank:
@@ -233,7 +233,7 @@ def main():
                             embed.add_field(
                                 name=participant["championName"] + " - " + str(participant["kills"]) + "/" +
                                      str(participant["deaths"]) + "/" + str(participant["assists"]),
-                                value=text_gold_damage_cs + text_lp + text_Arena + duree_game,
+                                value=text_gold_damage_cs + text_lp + text_arena + duree_game,
                                 inline=True
                             )
                             embed.set_thumbnail(

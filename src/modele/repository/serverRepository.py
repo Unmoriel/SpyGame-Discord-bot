@@ -1,7 +1,7 @@
 from src.modele.repository import connexionBaseDeDonnee
 
 
-async def add_server(id_server: int, name: str):
+async def add_server(id_server: int, name: str = None):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
 
