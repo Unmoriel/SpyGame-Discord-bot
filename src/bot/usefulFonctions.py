@@ -115,6 +115,7 @@ def game_type(queue_id):
         for queue in requete.json():
             if queue['queueId'] == queue_id:
                 return queue['description']
+        return "__Unknown__"
     else:
         print(f"Erreur : {requete.status_code} {requete.json()['status']['message']}")
         return "__Unknown__"

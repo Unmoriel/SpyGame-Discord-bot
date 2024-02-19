@@ -50,10 +50,11 @@ def main():
     async def send_welcom_message(guild):
         await guild.text_channels[0].send(
             "Hi, \n"
-            "* Use /set_main_channel to set a channel where the bot will send all the messages\n"
-            "* Use /set_recap_channel to set a channel where the bot will send the recap of the week\n"
-            "* Use /add to add a player to the watch list\n"
-            "* Use /remove to remove a player from the watch list\n")
+            "* Use __/set_main_channel__ to set a channel where the bot will send all the messages\n"
+            "* Use __/set_recap_channel__ to set a channel where the bot will send the recap of the week\n"
+            "* Use __/add__ to add a player to the watch list\n"
+            "* Use __/remove__ to remove a player from the watch list\n"
+            "* Use __/watch_list__ to show the watch list")
 
     async def send_weekly_recap(id_server):
         players = await watchRepository.get_players_by_server(id_server)
@@ -118,7 +119,7 @@ def main():
                 str,
                 "Format : example#1234",
                 autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add),
-                )
+            )
     ):
         await ctx.response.defer()
         if not ('#' in player):
@@ -212,7 +213,7 @@ def main():
                             print("Création de l'image...")
                             t1 = time.time()
                             image = await Utils.crea_image(match["info"]["participants"],
-                                                          Utils.game_type(match['info']['queueId']))
+                                                           Utils.game_type(match['info']['queueId']))
                             print(f"Image créée en {int(time.time() - t1)} secondes")
 
                             # I don't want hour in my text if the game is less than 1 hour
@@ -262,5 +263,3 @@ def main():
                 pass
 
     bot.run(discord_k)
-
-
