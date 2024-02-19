@@ -100,12 +100,12 @@ def main():
 
     @bot.slash_command(description="Set the channel where the bot will send the recap of the week")
     async def set_recap_channel(ctx, channel: discord.TextChannel):
-        await serverRepository.update_server(ctx.guild.id, recap_channel=channel.id)
+        await serverRepository.update_recap_channel(ctx.guild.id, recap_channel=channel.id)
         await ctx.respond(f"Recap channel set to {channel.name}")
 
     @bot.slash_command(description="Set the channel where the bot will send all the messages")
     async def set_main_channel(ctx, channel: discord.TextChannel):
-        await serverRepository.update_server(ctx.guild.id, main_channel=channel.id)
+        await serverRepository.update_main_channel(ctx.guild.id, main_channel=channel.id)
         await ctx.respond(f"Main channel set to {channel.name}")
 
     async def autocomplete_remove_add(ctx: discord.AutocompleteContext):
