@@ -131,10 +131,12 @@ def main():
             return
 
         account_info = await request.get_account(player)
+        print(account_info)
         if account_info:
 
             # Check if the player is already in the database
             if not await playerRepository.get_player_by_puuid(account_info['puuid']):
+                print("pas dans la BDD")
                 last_match = await request.get_last_match(account_info['puuid'])
                 rank_solo = await request.get_solo_rank(account_info['id'])
                 rank_flex = await request.get_flex_rank(account_info['id'])
