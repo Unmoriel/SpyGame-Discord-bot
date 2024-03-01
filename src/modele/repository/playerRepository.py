@@ -1,6 +1,19 @@
 from src.modele.repository import connexionBaseDeDonnee
 from src.modele.repository import rankRepository
 
+async def get_all_player() -> list:
+    """
+    Get all the players
+    """
+    conn = connexionBaseDeDonnee.connexion()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT DISTINCT * FROM JOUEURS"
+    )
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
 
 async def get_all_players_watch() -> list:
     """

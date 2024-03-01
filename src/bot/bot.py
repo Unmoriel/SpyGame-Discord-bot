@@ -108,7 +108,11 @@ def main():
         await serverRepository.update_main_channel(ctx.guild.id, main_channel=channel.id)
         await ctx.respond(f"Main channel set to {channel.name}")
 
-    async def autocomplete_remove_add(ctx: discord.AutocompleteContext):
+    async def autocomplete_add(ctx: discord.AutocompleteContext):
+        players = await playerRepository.get_all_player()
+        return [player["gameName_tagLine"] for player in players]
+
+    async def autocomplete_remove(ctx: discord.AutocompleteContext):
         players = await playerRepository.get_all_players_watch()
         return [player["gameName_tagLine"] for player in players]
 
@@ -118,7 +122,7 @@ def main():
             player: discord.Option(
                 str,
                 "Format : example#1234",
-                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add),
+                autocomplete=discord.utils.basic_autocomplete(autocomplete_add),
             ) # type: ignore
     ):
         await ctx.response.defer()
@@ -162,7 +166,7 @@ def main():
             pseudo: discord.Option(
                 str,
                 "Format : example#1234",
-                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add))): # type: ignore
+                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove))): # type: ignore
         player = await playerRepository.get_player_by_game_name_tag_line(pseudo)
         if player:
             await playerRepository.reset_player_week(player[0]['puuid'])
