@@ -119,7 +119,7 @@ def main():
                 str,
                 "Format : example#1234",
                 autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add),
-            )
+            ) # type: ignore
     ):
         await ctx.response.defer()
         if not ('#' in player):
@@ -162,7 +162,7 @@ def main():
             pseudo: discord.Option(
                 str,
                 "Format : example#1234",
-                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add))):
+                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove_add))): # type: ignore
         player = await playerRepository.get_player_by_game_name_tag_line(pseudo)
         if player:
             await playerRepository.reset_player_week(player[0]['puuid'])
@@ -239,7 +239,7 @@ def main():
                             embed.set_thumbnail(
                                 url=Utils.link_image_champion() + participant['championName'] + ".png"
                             )
-                            embed.set_image(url=await Utils.save_image_cloud(image))
+                            embed.set_image(url=await Utils.save_image_cloud)
 
                             id_servers = await watchRepository.get_server_by_player(player['puuid'])
 

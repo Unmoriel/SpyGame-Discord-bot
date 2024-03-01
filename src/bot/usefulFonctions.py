@@ -77,7 +77,7 @@ async def save_image_cloud(image):
         secure=True
     )
     imsave(CHEMINOTHERS+"/assembled_image.png", image)
-    cloudinary.uploader.upload(CHEMIN + "../../others/assembled_image.png",
+    cloudinary.uploader.upload(CHEMINOTHERS+ "/assembled_image.png",
                                public_id="assembled_image", overwrite=True,
                                resource_type="image")
     return cloudinary.api.resource("assembled_image")["url"]
