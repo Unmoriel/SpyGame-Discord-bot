@@ -172,11 +172,17 @@ def main():
             await ctx.respond("Player not found")
 
     @bot.slash_command(description="Show the watch list")
-    async def watch_list(ctx):
+    async def watch_list(ctx : discord.Interaction):
+        await ctx.response.defer()
         players = await watchRepository.get_players_by_server(ctx.guild.id)
+        players_str = ""
         if players:
-            players = "\n".join([f"{player['pseudo']} - {player['gameName_tagLine']}" for player in players])
-            await ctx.respond(players)
+            for player in players:
+                if player['pseudo']:
+                    players_str += f"\n- {player['pseudo']} - {player['gameName_tagLine']}"
+                else:
+                    players_str += f"\n- {player['gameName_tagLine']}"
+            await ctx.respond(players_str)
         else:
             await ctx.respond("No player in the watch list")
 
@@ -239,7 +245,7 @@ def main():
                             embed.set_thumbnail(
                                 url=Utils.link_image_champion() + participant['championName'] + ".png"
                             )
-                            embed.set_image(url=await Utils.save_image_cloud)
+                            embed.set_image(url=await Utils.save_image_cloud(image))
 
                             id_servers = await watchRepository.get_server_by_player(player['puuid'])
 

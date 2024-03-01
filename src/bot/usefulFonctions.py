@@ -7,7 +7,7 @@ from matplotlib.image import imsave
 from src.configuration import config
 import cloudinary.uploader
 import cloudinary.api
-from src import CHEMIN, CHEMINDATA, CHEMINOTHERS
+from src import CHEMIN, CHEMINOTHERS
 
 PATCH_DEFAULT = "14.3.1"  # Patch par défaut
 
