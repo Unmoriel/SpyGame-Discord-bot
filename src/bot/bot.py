@@ -182,9 +182,9 @@ def main():
                     players_str += f"\n- {player['pseudo']} - {player['gameName_tagLine']}"
                 else:
                     players_str += f"\n- {player['gameName_tagLine']}"
-            await ctx.respond(players_str)
+            await ctx.followup.send(players_str)
         else:
-            await ctx.respond("No player in the watch list")
+            await ctx.followup.send("No player in the watch list")
 
     @tasks.loop(seconds=30)
     async def check_last_match():
@@ -198,7 +198,7 @@ def main():
                 if match:
                     for participant in match['info']['participants']:
                         if participant['puuid'] == player['puuid']:
-                            titre = f"{player['pseudo']}"
+                            titre = f"{player['gameName_tagLine']}"
                             titre += " won " if participant['win'] else " lost "
                             titre += Utils.game_type(match['info']['queueId'])
 
