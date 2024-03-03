@@ -230,7 +230,7 @@ def main():
                             duree_game = ("\nDuration : " +
                                           (time.strftime('%M:%S', time.gmtime(match['info']['gameDuration'])) + " min"
                                            if match['info']['gameDuration'] <= 3600
-                                           else time.strftime('%H:%M:%S', time.gmtime(participant['gameDuration']))))
+                                           else time.strftime('%H:%M:%S', time.gmtime(match['info']['gameDuration']))))
 
                             text_gold_damage_cs = (f"{participant['goldEarned']} golds - "
                                                    f"{participant['totalDamageDealtToChampions']} damages - "
