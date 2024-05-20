@@ -99,14 +99,16 @@ def main():
     )
 
     @bot.slash_command(description="Set the channel where the bot will send the recap of the week")
-    async def set_recap_channel(ctx, channel: discord.TextChannel):
+    async def set_recap_channel(ctx: discord.Interaction, channel: discord.TextChannel):
+        await ctx.response.defer()
         await serverRepository.update_recap_channel(ctx.guild.id, recap_channel=channel.id)
-        await ctx.respond(f"Recap channel set to {channel.name}")
+        await ctx.followup.send(f"Recap channel set to {channel.name}")
 
     @bot.slash_command(description="Set the channel where the bot will send all the messages")
-    async def set_main_channel(ctx, channel: discord.TextChannel):
+    async def set_main_channel(ctx: discord.Interaction, channel: discord.TextChannel):
+        await ctx.response.defer()
         await serverRepository.update_main_channel(ctx.guild.id, main_channel=channel.id)
-        await ctx.respond(f"Main channel set to {channel.name}")
+        await ctx.followup.send(f"Main channel set to {channel.name}")
 
     async def autocomplete_add(ctx: discord.AutocompleteContext):
         players = await playerRepository.get_all_player()
@@ -123,7 +125,7 @@ def main():
                 str,
                 "Format : example#1234",
                 autocomplete=discord.utils.basic_autocomplete(autocomplete_add),
-            ) # type: ignore
+            )  # type: ignore
     ):
         await ctx.response.defer()
         if not ('#' in player):
@@ -142,7 +144,7 @@ def main():
                     puuid=account_info['puuid'],
                     game_name_tag_line=player,
                     sumonerId=account_info['id'],
-                    pseudo=account_info['name'],
+                    pseudo=player.split("#")[0],
                     dernier_match=last_match,
                     loose_week=0,
                     win_week=0,
@@ -166,7 +168,7 @@ def main():
             pseudo: discord.Option(
                 str,
                 "Format : example#1234",
-                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove))): # type: ignore
+                autocomplete=discord.utils.basic_autocomplete(autocomplete_remove))):  # type: ignore
         player = await playerRepository.get_player_by_game_name_tag_line(pseudo)
         if player:
             await playerRepository.reset_player_week(player[0]['puuid'])
@@ -176,7 +178,7 @@ def main():
             await ctx.respond("Player not found")
 
     @bot.slash_command(description="Show the watch list")
-    async def watch_list(ctx : discord.Interaction):
+    async def watch_list(ctx: discord.Interaction):
         await ctx.response.defer()
         players = await watchRepository.get_players_by_server(ctx.guild.id)
         players_str = ""

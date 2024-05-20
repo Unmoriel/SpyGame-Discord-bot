@@ -54,7 +54,7 @@ async def get_players_by_server(id_server: str) -> list:
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
-        "SELECT * FROM JOUEUR j JOIN WATCH w ON w.puuid = j.puuid WHERE id_server=%s", (id_server,)
+        "SELECT * FROM JOUEURS j JOIN WATCH w ON w.puuid = j.puuid WHERE id_server=%s", (id_server,)
     )
     result = cursor.fetchall()
     cursor.close()

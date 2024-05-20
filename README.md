@@ -86,13 +86,10 @@ Ce bot permet de voir le résultat des parties de LoL de n'importe qui tant que 
 
 <h4>Précisions :</h4>
 <p>
-Je ne suis pas un développeur pro.
+Je ne suis pas un développeur proffessionel.
 <br>
-Je vous fournit un code qui vous permet de faire fonctionner un bot discord. Je ne vous explique pas comment en créer un.
+Touts les documents en plus (comme le shémas relationnel de la BDD) se trouve le dossier "ressources"
 <br>
-Le bot et la base de données ne sont pas destinés à suivre une grande quantité de joueur. Le bot peut supporter de base une dizaine de personnes, mais vous pouvez augmenter jusqu'à 20 - 25 si vous optimisez le code.
-<br>
-Enfin, le plus grand inconvénient du bot est la nécessité d'obtenir une clé API "personal" ou "production". La clé "personal" est celle que je recommande. Elle ne débloque pas le plafond de requêtes maximums mais c'est la plus simple à avoir. Personnellement, je l'ai obtenu en un peu moins de deux semaines en mettant ce projet Github en lien.
 </p>
 
 <h3>Librairies pythons nécessaires :</h3>

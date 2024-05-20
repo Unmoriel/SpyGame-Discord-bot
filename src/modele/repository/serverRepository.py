@@ -29,7 +29,7 @@ async def delete_server(id_server: int):
     print(f"Server {id_server} deleted from the database")
 
 
-async def update_main_channel(id_server: str, main_channel: int):
+async def update_main_channel(id_server: int, main_channel: int):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(
@@ -42,7 +42,7 @@ async def update_main_channel(id_server: str, main_channel: int):
     print(f"Server {id_server} updated in the database")
 
 
-async def update_recap_channel(id_server: str, recap_channel: int):
+async def update_recap_channel(id_server: int, recap_channel: int):
     conn = connexionBaseDeDonnee.connexion()
     cursor = conn.cursor()
     cursor.execute(

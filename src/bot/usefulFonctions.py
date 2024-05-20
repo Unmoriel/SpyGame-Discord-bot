@@ -1,4 +1,3 @@
-import time
 
 import requests
 from numpy import concatenate
@@ -25,15 +24,14 @@ def link_champions_data():
     return f"https://ddragon.leagueoflegends.com/cdn/{new_patch()}/data/fr_FR/champion.json"
 
 
-def link_image_champion()-> str:
+def link_image_champion() -> str:
     return f"https://ddragon.leagueoflegends.com/cdn/{new_patch()}/img/champion/"
 
 
 def getChampionsId(key):
     '''
-    Au début j'utilisais la catégoris "championName" mais malheursement elle n'est pas présente
-    dans les requetes des matchs en cours donc il me faut passer par leurs 'key' puis leur id
-    (qui est enfaite leurs nom oui oui c'est bizarre)
+    La colonne championName n'est pas fiable, donc je passe par leur
+    key pour récupérer le nom des perso.
     '''
     url_champions_data = link_champions_data()
     r = requests.get(url_champions_data)
@@ -48,17 +46,17 @@ async def crea_image(participants, type_partie):
     champions_data = requests.get(url_champions_data).json()['data']
 
     image = Image.open(
-        requests.get(url_champions_image + champions_data[participants[0]['championName']]['image']['full'],
-                     stream=True).raw)
+        requests.get(url_champions_image + champions_data[getChampionsId(participants[0]["championId"])]
+        ['image']['full'], stream=True).raw)
     for i in range(1, len(participants)):
         req = requests.get(
-            url_champions_image + champions_data[participants[i]['championName']]['image']['full'],
+            url_champions_image + champions_data[getChampionsId(participants[i]['championId'])]['image']['full'],
             stream=True).raw
 
         imagePlus = Image.open(req)
         image = concatenate((image, imagePlus), axis=1)
         if type_partie == "an Arena":
-            if (i-1) % 2 == 0 and i != 7:
+            if (i - 1) % 2 == 0 and i != 7:
                 imageArena = Image.open(CHEMINOTHERS + '/versus_white.jpg')
                 image = concatenate((image, imageArena), axis=1)
         else:
@@ -76,14 +74,14 @@ async def save_image_cloud(image):
         api_secret=config.get_cloudinary_key()['api_secret'],
         secure=True
     )
-    imsave(CHEMINOTHERS+"/assembled_image.png", image)
-    cloudinary.uploader.upload(CHEMINOTHERS+ "/assembled_image.png",
+    imsave(CHEMINOTHERS + "/assembled_image.png", image)
+    cloudinary.uploader.upload(CHEMINOTHERS + "/assembled_image.png",
                                public_id="assembled_image", overwrite=True,
                                resource_type="image")
     return cloudinary.api.resource("assembled_image")["url"]
 
 
-def str_rank(old_rank: dict, new_rank: dict, win: bool)-> str:
+def str_rank(old_rank: dict, new_rank: dict, win: bool) -> str:
     text_lp = "\n"
 
     # If the player has no rank yet
@@ -95,8 +93,8 @@ def str_rank(old_rank: dict, new_rank: dict, win: bool)-> str:
     # If the player has changed rank
     if change_rank:
         text_lp += "Promoted " if win else "Demoted "
-        text_lp += (f"{old_rank['tier']} {old_rank['rank']} {old_rank['LP']} -> "
-                   f"{new_rank['tier']} {new_rank['rank']} - {new_rank['LP']} LP")
+        text_lp += (f"{old_rank['tier']} {old_rank['rank']} -> "
+                    f"{new_rank['tier']} {new_rank['rank']} - {new_rank['LP']} LP")
         return text_lp
 
     # If the player has just won or lost LP
@@ -119,4 +117,3 @@ def game_type(queue_id):
     else:
         print(f"Erreur : {requete.status_code} {requete.json()['status']['message']}")
         return "__Unknown__"
-
