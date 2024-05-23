@@ -55,8 +55,8 @@ async def crea_image(participants, type_partie):
 
         imagePlus = Image.open(req)
         image = concatenate((image, imagePlus), axis=1)
-        if type_partie == "an Arena":
-            if (i - 1) % 2 == 0 and i != 7:
+        if type_partie == "Arena":
+            if (i - 1) % 2 == 0 and i != 15:
                 imageArena = Image.open(CHEMINOTHERS + '/versus_white.jpg')
                 image = concatenate((image, imageArena), axis=1)
         else:
