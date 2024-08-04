@@ -1,6 +1,7 @@
 /data
 /others/assembled_image.png
-/src/configuration
+/src/configuration/config.py
+/src/configuration/conf.json
 /.idea
 __pycache__
 .vscode
