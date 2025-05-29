@@ -29,16 +29,17 @@ def link_image_champion() -> str:
 
 
 def getChampionsId(key):
-    '''
+    """
     La colonne championName n'est pas fiable, donc je passe par leur
     key pour récupérer le nom des perso.
-    '''
+    """
     url_champions_data = link_champions_data()
     r = requests.get(url_champions_data)
     champions_data = r.json()['data']
     for champion in champions_data:
         if int(champions_data[champion]['key']) == key:
             return champions_data[champion]['id']
+    return None
 
 
 async def crea_image(participants, type_partie):
